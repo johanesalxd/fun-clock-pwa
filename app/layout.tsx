@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: 'Kids Time Explorer',
   description: 'Interactive clock for kids to learn time',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

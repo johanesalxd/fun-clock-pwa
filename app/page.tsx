@@ -16,7 +16,7 @@ const getSvgPoint = (e: React.PointerEvent | PointerEvent, svg: SVGSVGElement) =
   return pt.matrixTransform(svg.getScreenCTM()!.inverse());
 };
 
-function AnalogClock({ time, onChangeTime, showSeconds, is24Hour }: any) {
+function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying }: any) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeHand, setActiveHand] = useState<'hour' | 'minute' | 'second' | null>(null);
   const lastAngleRef = useRef<number>(0);
@@ -105,7 +105,7 @@ function AnalogClock({ time, onChangeTime, showSeconds, is24Hour }: any) {
   };
 
   return (
-    <svg ref={svgRef} viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl bg-white rounded-full" style={{ touchAction: 'none' }}>
+    <svg aria-hidden="true" ref={svgRef} viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl bg-white rounded-full" style={{ touchAction: 'none' }}>
       <defs>
         <linearGradient id="minSecGradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#3b82f6" />
@@ -155,19 +155,26 @@ function AnalogClock({ time, onChangeTime, showSeconds, is24Hour }: any) {
       
       <circle cx="50" cy="50" r="2" fill="#1e293b" className="pointer-events-none" />
       <circle cx="50" cy="50" r="1" fill="#ffffff" className="pointer-events-none" />
+      
+      {!isPlaying && (
+        <g className="pointer-events-none" transform="translate(50, 75)">
+          <rect x="-18" y="-6" width="36" height="12" rx="6" fill="rgba(255,255,255,0.8)" />
+          <text x="0" y="2.5" fontSize="6" fontWeight="900" fontFamily="sans-serif" fill="#94a3b8" textAnchor="middle" letterSpacing="0.5">PAUSED</text>
+        </g>
+      )}
     </svg>
   );
 }
 
 const TimeColumn = ({ value, unit, colorClass, addTime }: { value: string, unit: 'hour'|'minute'|'second', colorClass: string, addTime: (amount: number, unit: 'hour'|'minute'|'second') => void }) => (
   <div className="flex flex-col items-center">
-    <button onClick={() => addTime(1, unit)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation mb-1">
+    <button aria-label={`Increase ${unit}`} onClick={() => addTime(1, unit)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation mb-1">
       <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={3} />
     </button>
     <div className={cn("text-3xl sm:text-4xl md:text-5xl font-black tabular-nums tracking-tighter leading-none", colorClass)}>
       {value}
     </div>
-    <button onClick={() => addTime(-1, unit)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation mt-1">
+    <button aria-label={`Decrease ${unit}`} onClick={() => addTime(-1, unit)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation mt-1">
       <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={3} />
     </button>
   </div>
@@ -186,7 +193,15 @@ function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, className }: 
   };
 
   const toggleAmPm = () => {
-    onChangeTime((prev: number) => prev + 12 * 3600000);
+    onChangeTime((prev: number) => {
+      const d = new Date(prev);
+      const h = d.getHours();
+      if (h >= 12) {
+        return prev - 12 * 3600000;
+      } else {
+        return prev + 12 * 3600000;
+      }
+    });
   };
 
   let h = date.getHours();
@@ -208,7 +223,7 @@ function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, className }: 
       {showSeconds && (
         <>
           <div className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-300 pb-1 animate-pulse" style={{ animationDelay: '500ms' }}>:</div>
-          <TimeColumn value={pad(s)} unit="second" colorClass="text-green-500" addTime={addTime} />
+          <TimeColumn value={pad(s)} unit="second" colorClass="text-green-700" addTime={addTime} />
         </>
       )}
       {!is24Hour && (
@@ -234,13 +249,13 @@ function DateDisplay({ time, onChangeTime, className }: any) {
 
   return (
     <div className={cn("flex items-center justify-between bg-white/90 backdrop-blur-xl px-3 sm:px-5 py-2 sm:py-3 rounded-2xl shadow-xl border-4 border-white/50", className)}>
-      <button onClick={() => addDays(-1)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation">
+      <button aria-label="Previous day" onClick={() => addDays(-1)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation">
         <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 rotate-90" strokeWidth={3} />
       </button>
       <div className="text-sm sm:text-base md:text-lg font-black text-slate-700 text-center flex-1 mx-2 whitespace-nowrap">
         {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
       </div>
-      <button onClick={() => addDays(1)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation">
+      <button aria-label="Next day" onClick={() => addDays(1)} className="p-1 sm:p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-400 hover:text-slate-700 active:scale-90 transition-all touch-manipulation">
         <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 rotate-90" strokeWidth={3} />
       </button>
     </div>
@@ -260,7 +275,7 @@ function Toggle({ label, checked, onChange, color }: any) {
       <div className={cn("w-10 h-6 rounded-full flex items-center px-1 transition-colors", checked ? colorClasses : "bg-slate-300")}>
         <div className={cn("w-4 h-4 rounded-full bg-white shadow-sm transition-transform", checked ? "translate-x-4" : "translate-x-0")} />
       </div>
-      <input type="checkbox" className="hidden" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <input type="checkbox" role="switch" aria-checked={checked} className="hidden" checked={checked} onChange={(e) => onChange(e.target.checked)} />
     </label>
   );
 }
@@ -278,7 +293,6 @@ function WeatherOverlay({ condition, isDay }: { condition: string, isDay: boolea
       animationDelay: `${Math.random() * 2}s`
     })));
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSnowFlakes(Array.from({ length: 50 }).map(() => ({
       left: `${Math.random() * 100}%`,
       top: `-${Math.random() * 20 + 10}%`,
@@ -366,9 +380,7 @@ export default function TimeExplorerApp() {
   useEffect(() => {
     const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (!mounted) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimezone(localTz);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true);
       const now = new Date();
       const tzDateStr = now.toLocaleString('en-US', { 
@@ -418,6 +430,7 @@ export default function TimeExplorerApp() {
         console.warn("Geolocation not available or denied. Using default location.");
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -444,6 +457,16 @@ export default function TimeExplorerApp() {
     setIsPlaying(false);
     setTime(prev => {
       const nextTime = typeof newTime === 'function' ? newTime(prev) : newTime;
+      const now = new Date();
+      const tzDateStr = now.toLocaleString('en-US', {
+        timeZone: timezone,
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false
+      });
+      const tzDate = new Date(tzDateStr);
+      const realTimeInTz = tzDate.getTime() + now.getMilliseconds();
+      setTimeOffset(nextTime - realTimeInTz);
       return nextTime;
     });
   };
@@ -497,8 +520,6 @@ export default function TimeExplorerApp() {
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.muted = isMuted;
-    if (roosterRef.current) roosterRef.current.muted = isMuted;
-    if (cricketRef.current) cricketRef.current.muted = isMuted;
     
     if (!isMuted) {
        audioRef.current.play().catch(e => console.log("Audio play blocked", e));
@@ -536,10 +557,11 @@ export default function TimeExplorerApp() {
   }
 
   return (
-    <main className="h-[100dvh] w-full flex justify-center bg-black overflow-hidden">
+    <main className="h-[100dvh] w-full flex justify-center overflow-hidden">
+      <h1 className="sr-only">Kids Time Explorer</h1>
       
       {/* Orientation Locks */}
-      <div className="fixed inset-0 z-[100] bg-slate-900 text-white flex-col items-center justify-center hidden [@media(max-width:767px)_and_(orientation:landscape)]:flex">
+      <div className="fixed inset-0 z-[100] bg-slate-900 text-white flex-col items-center justify-center hidden [@media(hover:none)_and_(pointer:coarse)_and_(orientation:landscape)_and_(max-height:500px)]:flex">
         <RotateCcw className="w-16 h-16 mb-6 animate-[spin_3s_linear_infinite]" />
         <h2 className="text-2xl font-black text-center px-4">Please rotate your phone to portrait mode.</h2>
       </div>
@@ -581,18 +603,20 @@ export default function TimeExplorerApp() {
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none">
           <div className="flex flex-col gap-1 pointer-events-auto">
             <div className="flex items-center gap-1.5 bg-white/30 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-white/20">
-              <MapPin className="w-4 h-4 text-slate-700" />
-              <span className="text-sm font-bold text-slate-800">{locationName}</span>
+              <MapPin className={cn("w-4 h-4", isDay ? "text-slate-700" : "text-slate-200")} />
+              <span className={cn("text-sm font-bold", isDay ? "text-slate-800" : "text-slate-100")}>{locationName}</span>
             </div>
           </div>
           <div className="flex flex-col gap-3 pointer-events-auto">
             <button 
+              aria-label="Settings"
               onClick={() => setShowSettings(true)}
               className="p-3 bg-white/30 backdrop-blur-md rounded-full shadow-sm border border-white/20 text-slate-800 hover:bg-white/50 transition-colors"
             >
               <Settings className="w-6 h-6" />
             </button>
             <button 
+              aria-label={isPlaying ? "Pause clock" : "Play clock"}
               onClick={togglePlay}
               className={cn(
                 "p-3 rounded-full shadow-sm border-2 transition-colors",
@@ -605,6 +629,7 @@ export default function TimeExplorerApp() {
             </button>
             {timeOffset !== 0 && (
               <button 
+                aria-label="Sync to current time"
                 onClick={syncToNow}
                 className="p-3 bg-blue-100/80 border-blue-300 text-blue-700 rounded-full shadow-sm hover:bg-blue-200 transition-all animate-in fade-in zoom-in duration-300"
               >
@@ -625,6 +650,7 @@ export default function TimeExplorerApp() {
                 onChangeTime={handleTimeChange} 
                 showSeconds={showSeconds} 
                 is24Hour={is24Hour} 
+                isPlaying={isPlaying}
               />
             </div>
           </div>
@@ -652,13 +678,15 @@ export default function TimeExplorerApp() {
               <div className="flex items-center justify-between gap-3 sm:gap-4 bg-white/40 backdrop-blur-xl px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg border-2 border-white/40 whitespace-nowrap w-full flex-1">
                 <div className="flex items-center gap-2">
                   {isDay ? <Sun className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 drop-shadow-md" fill="currentColor" /> : <Moon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 drop-shadow-md" fill="currentColor" />}
-                  <span className="text-sm sm:text-base font-black tracking-tight text-slate-800">{isDay ? 'Day Time' : 'Night Time'}</span>
+                  <span className={cn("text-sm sm:text-base font-black tracking-tight", isDay ? "text-slate-800" : "text-slate-100")}>{isDay ? 'Day Time' : 'Night Time'}</span>
                 </div>
-                {isCurrentDate && (
+                {isCurrentDate ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm sm:text-base font-black text-blue-600 capitalize">{weatherCondition}</span>
-                    {weatherData && <span className="text-sm sm:text-base font-bold text-slate-700">{weatherData.temperature}°C</span>}
+                    <span className={cn("text-sm sm:text-base font-black capitalize", isDay ? "text-blue-600" : "text-blue-300")}>{weatherCondition}</span>
+                    {weatherData && <span className={cn("text-sm sm:text-base font-bold", isDay ? "text-slate-700" : "text-slate-200")}>{weatherData.temperature}°C</span>}
                   </div>
+                ) : (
+                  <span className={cn("text-sm font-bold italic", isDay ? "text-slate-500" : "text-slate-300")}>Time traveled</span>
                 )}
               </div>
             </div>
@@ -674,6 +702,7 @@ export default function TimeExplorerApp() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-black text-slate-800">Settings</h2>
                 <button 
+                  aria-label="Close settings"
                   onClick={() => setShowSettings(false)}
                   className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors"
                 >
