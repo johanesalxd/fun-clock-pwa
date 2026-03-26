@@ -358,7 +358,6 @@ export default function TimeExplorerApp() {
 
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const thunderRef = useRef<HTMLAudioElement>(null);
   const roosterRef = useRef<HTMLAudioElement>(null);
   const cricketRef = useRef<HTMLAudioElement>(null);
   const prevIsDay = useRef<boolean | null>(null);
@@ -367,7 +366,9 @@ export default function TimeExplorerApp() {
   useEffect(() => {
     const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (!mounted) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimezone(localTz);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true);
       const now = new Date();
       const tzDateStr = now.toLocaleString('en-US', { 
@@ -471,10 +472,8 @@ export default function TimeExplorerApp() {
   };
 
   const playThunder = () => {
-    if (thunderRef.current) {
-      thunderRef.current.currentTime = 0;
-      thunderRef.current.play().catch(e => console.log(e));
-    }
+    const audio = new Audio(AUDIO_URLS.thunder);
+    audio.play().catch(e => console.log(e));
   };
 
   const date = new Date(time);
@@ -498,7 +497,6 @@ export default function TimeExplorerApp() {
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.muted = isMuted;
-    if (thunderRef.current) thunderRef.current.muted = isMuted;
     if (roosterRef.current) roosterRef.current.muted = isMuted;
     if (cricketRef.current) cricketRef.current.muted = isMuted;
     
@@ -511,30 +509,20 @@ export default function TimeExplorerApp() {
 
   useEffect(() => {
     if (prevIsDay.current !== null && prevIsDay.current !== isDay) {
-      if (!isMuted) {
-        if (isDay && roosterRef.current) {
+      if (isDay) {
+        if (roosterRef.current) {
           roosterRef.current.currentTime = 0;
           roosterRef.current.play().catch(e => console.log("Rooster play blocked", e));
-          setTimeout(() => {
-            if (roosterRef.current) {
-              roosterRef.current.pause();
-              roosterRef.current.currentTime = 0;
-            }
-          }, 5000);
-        } else if (!isDay && cricketRef.current) {
+        }
+      } else {
+        if (cricketRef.current) {
           cricketRef.current.currentTime = 0;
           cricketRef.current.play().catch(e => console.log("Cricket play blocked", e));
-          setTimeout(() => {
-            if (cricketRef.current) {
-              cricketRef.current.pause();
-              cricketRef.current.currentTime = 0;
-            }
-          }, 5000);
         }
       }
     }
     prevIsDay.current = isDay;
-  }, [isDay, isMuted]);
+  }, [isDay]);
 
   const bgClass = isDay ? 'bg-sky-300' : 'bg-indigo-950';
   const textColor = isDay ? 'text-slate-800' : 'text-slate-100';
@@ -565,7 +553,6 @@ export default function TimeExplorerApp() {
         
         {/* Audio Elements */}
         <audio ref={audioRef} src={currentAudioUrl} loop />
-        <audio ref={thunderRef} src={AUDIO_URLS.thunder} />
         <audio ref={roosterRef} src={AUDIO_URLS.rooster} />
         <audio ref={cricketRef} src={AUDIO_URLS.night} />
 
