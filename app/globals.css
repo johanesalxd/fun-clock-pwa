@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@keyframes rain {
+  0% { transform: translateY(0) scaleY(1); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh) scaleY(2); opacity: 0; }
+}
+
+@keyframes snow {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh) translateX(20px); opacity: 0; }
+}
+
+@keyframes lightning {
+  0%, 95%, 98%, 100% { background-color: transparent; }
+  96%, 99% { background-color: rgba(255, 255, 255, 0.8); }
+}
+
+@keyframes clouds {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(150vw); }
+}
