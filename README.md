@@ -30,8 +30,8 @@ When you load or refresh the app, it detects your location and fetches the curre
 - **Snow:** Soft, white snowflakes drift down the screen.
 
 ### 2. Background Audio
-*Note: Browsers block autoplaying audio. You must open Settings and click "Unmute Sounds" to hear the background tracks.*
-- **Weather Audio:** If it is currently raining, snowing, or thundering, the app plays the corresponding ambient sound (Rain, Snow, Thunderstorm).
+*Note: Browsers block autoplaying audio. You must open Settings and click "Unmute Sounds" to hear the continuous background tracks.*
+- **Weather Audio:** If it is currently raining, snowing, or thundering, the app plays the corresponding ambient sound (Rain, Snow, Thunderstorm) continuously.
 - **Time Travel Rule:** Weather audio only plays if the clock's date matches *today's real date*. If you drag the clock to a past or future date, the app defaults to clear weather sounds.
 - **Clear Weather Audio:** Defaults to **Birds singing** during the Day, and **Crickets chirping** at Night.
 
@@ -39,16 +39,18 @@ When you load or refresh the app, it detects your location and fetches the curre
 The app transitions between Day and Night at exactly **6:00 AM** and **6:00 PM (18:00)**.
 - **Daytime (6:00 AM - 5:59 PM):** Sky turns light blue.
 - **Nighttime (6:00 PM - 5:59 AM):** Sky turns deep indigo and stars appear.
-- **Sunrise Sound:** Crossing 6:00 AM triggers a **Rooster crow** for 5 seconds.
-- **Sunset Sound:** Crossing 6:00 PM triggers **Crickets chirping** for 5 seconds.
+- **Sunrise Sound:** Crossing 6:00 AM triggers a **Rooster crow** (approx. 2 seconds).
+- **Sunset Sound:** Crossing 6:00 PM triggers **Crickets chirping**.
+- **Mute Bypass & Overlap:** These transition sounds play instantly when dragging the clock past 6:00 AM/PM, even if the continuous background sounds are muted. They naturally overlap with the continuous background audio.
 
 ### 4. Soundboard
 Available in the Settings menu, the soundboard lets you manually trigger any sound in the app.
+- **Mute Bypass:** The soundboard operates independently of the background audio mute toggle, allowing you to play sounds even when the background is silent.
 - **5-Second Limit:** Every sound triggered from the soundboard plays for exactly 5 seconds and then automatically stops to prevent overlapping noise clutter.
 
 ## How to Use
 
-1. **Unmute**: Click the gear icon (Settings) and click "Unmute Sounds" to enable the audio experience.
+1. **Unmute**: Click the gear icon (Settings) and click "Unmute Sounds" to enable the continuous audio experience.
 2. **Explore Time**: Drag the clock hands or use the arrow buttons to move through the day.
 3. **Sync**: Click the "Sync to Now" button to return to your current local time and weather.
 4. **Soundboard**: Open Settings to find the Soundboard and play with the different environment sounds.
