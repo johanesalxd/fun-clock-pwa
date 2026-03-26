@@ -330,12 +330,12 @@ function WeatherOverlay({ condition, isDay }: { condition: string, isDay: boolea
 }
 
 const AUDIO_URLS = {
-  rain: 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Rain_on_a_tin_roof.ogg',
-  thunder: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/Thunder_strike_1.ogg',
-  sunny: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bird_song_in_the_morning.ogg',
-  snow: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Wind_howling.ogg',
-  rooster: 'https://actions.google.com/sounds/v1/animals/rooster_crowing.ogg',
-  night: 'https://actions.google.com/sounds/v1/ambiences/night_crickets.ogg'
+  rain: 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
+  thunder: 'https://assets.mixkit.co/active_storage/sfx/2390/2390-preview.mp3',
+  sunny: 'https://assets.mixkit.co/active_storage/sfx/17/17-preview.mp3',
+  snow: 'https://assets.mixkit.co/active_storage/sfx/2608/2608-preview.mp3',
+  rooster: 'https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3',
+  night: 'https://assets.mixkit.co/active_storage/sfx/39/39-preview.mp3'
 };
 
 export default function TimeExplorerApp() {
@@ -354,7 +354,7 @@ export default function TimeExplorerApp() {
   const [weatherData, setWeatherData] = useState<any>(null);
   const [weatherCondition, setWeatherCondition] = useState<string>('clear');
   const [locationName, setLocationName] = useState<string>('Local');
-  const [timezone, setTimezone] = useState<string>(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [timezone, setTimezone] = useState<string>('UTC');
 
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -364,11 +364,13 @@ export default function TimeExplorerApp() {
 
   // Initial time sync
   useEffect(() => {
+    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (!mounted) {
+      setTimezone(localTz);
       setMounted(true);
       const now = new Date();
       const tzDateStr = now.toLocaleString('en-US', { 
-        timeZone: timezone,
+        timeZone: localTz,
         year: 'numeric', month: 'numeric', day: 'numeric',
         hour: 'numeric', minute: 'numeric', second: 'numeric',
         hour12: false
