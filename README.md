@@ -17,9 +17,10 @@ A beautiful, interactive clock application designed for kids (and adults!) to ex
   - **Manual Thunder**: Click the thunder button during storms to hear a strike.
 - **Soundboard**: A dedicated section in settings to play any of the app's sounds manually.
 - **Customizable Display**: Toggle between 12/24 hour time, show/hide seconds, and show/hide the date.
-- **Progressive Web App (PWA)**: Installable on mobile and desktop devices with custom maskable icons.
+- **Progressive Web App (PWA)**: Installable on mobile and desktop devices with custom maskable icons. Fully supports "Add to Home Screen" on iOS/iPadOS via Safari or Chrome.
 - **Accessible Design (A11Y)**: High-contrast UI elements, comprehensive ARIA labels, screen-reader-friendly toggles, and semantic HTML structure.
 - **Smart Orientation Locks**: Prompts users to rotate their devices (portrait for phones, landscape for tablets) for the optimal viewing experience.
+- **In-App Help Guide**: A dedicated "How to Play" modal explaining features, controls, and installation tips.
 
 ## Day, Night, and Weather Scenarios
 
@@ -60,6 +61,7 @@ Available in the Settings menu, the soundboard lets you manually trigger any sou
 2. **Explore Time**: Drag the clock hands or use the digital arrow buttons to move through the day.
 3. **Sync**: Click the "Sync to Now" button (rotate icon) to return to your current local time and weather.
 4. **Soundboard**: Open Settings to find the Soundboard and play with the different environment sounds.
+5. **Help**: Click the `?` icon at the top right to view the in-app guide and installation instructions.
 
 ## Technical Details
 

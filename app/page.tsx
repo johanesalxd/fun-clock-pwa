@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, RotateCcw, ChevronUp, ChevronDown, MapPin, Volume2, VolumeX, CloudLightning, Settings, X, Play, Pause, Music } from 'lucide-react';
+import { Sun, Moon, RotateCcw, ChevronUp, ChevronDown, MapPin, Volume2, VolumeX, CloudLightning, Settings, X, Play, Pause, Music, HelpCircle } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -358,6 +358,7 @@ export default function TimeExplorerApp() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [timeOffset, setTimeOffset] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   
   const [is24Hour, setIs24Hour] = useState(false);
   const [showSeconds, setShowSeconds] = useState(true);
@@ -608,14 +609,23 @@ export default function TimeExplorerApp() {
               <span className={cn("text-sm font-bold", isDay ? "text-slate-800" : "text-slate-100")}>{locationName}</span>
             </div>
           </div>
-          <div className="flex flex-col gap-3 pointer-events-auto">
-            <button 
-              aria-label="Settings"
-              onClick={() => setShowSettings(true)}
-              className={cn("p-3 backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
-            >
-              <Settings className="w-6 h-6" />
-            </button>
+          <div className="flex flex-col items-end gap-3 pointer-events-auto">
+            <div className="flex gap-3">
+              <button 
+                aria-label="Help"
+                onClick={() => setShowHelp(true)}
+                className={cn("p-3 backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
+              >
+                <HelpCircle className="w-6 h-6" />
+              </button>
+              <button 
+                aria-label="Settings"
+                onClick={() => setShowSettings(true)}
+                className={cn("p-3 backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
+              >
+                <Settings className="w-6 h-6" />
+              </button>
+            </div>
             <button 
               aria-label={isPlaying ? "Pause clock" : "Play clock"}
               onClick={togglePlay}
@@ -695,6 +705,62 @@ export default function TimeExplorerApp() {
           </div>
 
         </div>
+
+        {/* Help Overlay */}
+        {showHelp && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowHelp(false)}>
+            <div 
+              className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto flex flex-col gap-6 animate-in zoom-in-95 duration-300 text-slate-800 shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                  <HelpCircle className="w-6 h-6 text-blue-500" />
+                  How to Play
+                </h2>
+                <button 
+                  aria-label="Close help"
+                  onClick={() => setShowHelp(false)}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <section>
+                  <h3 className="font-bold text-lg mb-2 text-blue-600 flex items-center gap-2">
+                    🌟 Features
+                  </h3>
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    <li className="flex gap-2"><span className="text-blue-500">•</span> <strong>Interactive Clock:</strong> Drag the hands or use the buttons to time travel!</li>
+                    <li className="flex gap-2"><span className="text-blue-500">•</span> <strong>Real Weather:</strong> See what it&apos;s like outside right now based on your location.</li>
+                    <li className="flex gap-2"><span className="text-blue-500">•</span> <strong>Day & Night:</strong> Watch the sky change and stars appear automatically.</li>
+                    <li className="flex gap-2"><span className="text-blue-500">•</span> <strong>Nature Sounds:</strong> Hear birds, crickets, rain, and thunder.</li>
+                  </ul>
+                </section>
+                
+                <section>
+                  <h3 className="font-bold text-lg mb-2 text-green-600 flex items-center gap-2">
+                    🎮 How to Use
+                  </h3>
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    <li className="flex gap-2"><span className="text-green-500">•</span> <strong>Unmute:</strong> Click the Gear icon ⚙️ and select &quot;Unmute Sounds&quot; to hear the background audio.</li>
+                    <li className="flex gap-2"><span className="text-green-500">•</span> <strong>Explore:</strong> Move the clock hands to see the sky change.</li>
+                    <li className="flex gap-2"><span className="text-green-500">•</span> <strong>Sync:</strong> Click the Rotate icon 🔄 to return to the real time.</li>
+                    <li className="flex gap-2"><span className="text-green-500">•</span> <strong>Soundboard:</strong> Open Settings to play fun sounds anytime!</li>
+                  </ul>
+                </section>
+                
+                <section className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-xs text-slate-500 text-center">
+                    <strong>Tip:</strong> You can install this app on your device! On Android/Desktop, look for the install icon in your browser address bar. On iOS/iPadOS, open in Safari or Chrome and tap &quot;Share&quot; &gt; &quot;Add to Home Screen&quot;.
+                  </p>
+                </section>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Settings Overlay */}
         {showSettings && (
