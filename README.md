@@ -70,6 +70,21 @@ Available in the Settings menu, the soundboard lets you manually trigger any sou
 - Geolocation via **ip-api**.
 - Fully responsive, mobile-first design with device-specific orientation locks.
 
+## Testing & Quality Assurance (QA)
+
+This application has undergone a rigorous, 4-round automated QA process driven by AI agents using headless Playwright and Chrome DevTools Protocol (CDP). 
+
+**Key Highlights:**
+- **Accessibility & Performance:** Achieved a perfect **100/100 Lighthouse Accessibility score**, alongside excellent scores in SEO and Best Practices.
+- **Cross-Device Compatibility:** Fully tested across Desktop, Mobile (Portrait & Landscape), and Tablet viewports, including specific orientation locks for different device types.
+- **Advanced Emulation:** Verified complex edge cases using advanced CDP techniques:
+  - **Geolocation Overrides:** Tested weather fetching for different global coordinates (e.g., San Francisco, Tokyo).
+  - **Fetch Interception:** Mocked API responses to verify rare UI states (e.g., Thunderstorm conditions).
+  - **Audio Pipeline Verification:** Programmatically verified background audio and transition sounds (rooster/cricket) without relying on audible output.
+- **Zero Open Bugs:** All identified functional, UI/UX, and accessibility issues have been successfully resolved.
+
+For a comprehensive breakdown of the methodology, test matrices, and resolved issues, please refer to the full [QA Report](QA_REPORT.md).
+
 ## Deployment
 
 This app is ready to be shared or deployed directly from Google AI Studio.
