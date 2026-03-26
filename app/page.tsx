@@ -529,6 +529,7 @@ export default function TimeExplorerApp() {
   }, [isMuted, currentAudioUrl]);
 
   useEffect(() => {
+    if (!mounted) return;
     if (prevIsDay.current !== null && prevIsDay.current !== isDay) {
       if (isDay) {
         if (roosterRef.current) {
@@ -543,7 +544,7 @@ export default function TimeExplorerApp() {
       }
     }
     prevIsDay.current = isDay;
-  }, [isDay]);
+  }, [isDay, mounted]);
 
   const bgClass = isDay ? 'bg-sky-300' : 'bg-indigo-950';
   const textColor = isDay ? 'text-slate-800' : 'text-slate-100';
@@ -602,7 +603,7 @@ export default function TimeExplorerApp() {
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none">
           <div className="flex flex-col gap-1 pointer-events-auto">
-            <div className="flex items-center gap-1.5 bg-white/30 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-white/20">
+            <div className={cn("flex items-center gap-1.5 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
               <MapPin className={cn("w-4 h-4", isDay ? "text-slate-700" : "text-slate-200")} />
               <span className={cn("text-sm font-bold", isDay ? "text-slate-800" : "text-slate-100")}>{locationName}</span>
             </div>
@@ -611,7 +612,7 @@ export default function TimeExplorerApp() {
             <button 
               aria-label="Settings"
               onClick={() => setShowSettings(true)}
-              className="p-3 bg-white/30 backdrop-blur-md rounded-full shadow-sm border border-white/20 text-slate-800 hover:bg-white/50 transition-colors"
+              className={cn("p-3 backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
             >
               <Settings className="w-6 h-6" />
             </button>
@@ -675,7 +676,7 @@ export default function TimeExplorerApp() {
                 />
               )}
               
-              <div className="flex items-center justify-between gap-3 sm:gap-4 bg-white/40 backdrop-blur-xl px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg border-2 border-white/40 whitespace-nowrap w-full flex-1">
+              <div className={cn("flex items-center justify-between gap-3 sm:gap-4 backdrop-blur-xl px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg border-2 whitespace-nowrap w-full flex-1", isDay ? "bg-white/40 border-white/40" : "bg-black/20 border-white/10")}>
                 <div className="flex items-center gap-2">
                   {isDay ? <Sun className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 drop-shadow-md" fill="currentColor" /> : <Moon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 drop-shadow-md" fill="currentColor" />}
                   <span className={cn("text-sm sm:text-base font-black tracking-tight", isDay ? "text-slate-800" : "text-slate-100")}>{isDay ? 'Day Time' : 'Night Time'}</span>
