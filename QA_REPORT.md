@@ -4,6 +4,7 @@
 **Verification Date (Round 2):** 2026-03-27
 **Verification Date (Round 3):** 2026-03-27
 **Verification Date (Round 4):** 2026-03-27
+**Verification Date (Round 5):** 2026-03-27
 **URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
 **Tested on:** Desktop (1280x800), Mobile Portrait (390x844), Mobile Landscape (667x375 and 844x390), Tablet Portrait (768x1024), Tablet Landscape (1024x768)
 **Tools used:** dev-browser (headless Playwright), Chrome DevTools CDP (live browser)
@@ -159,32 +160,34 @@ This methodology generalizes to any web or mobile PWA. The key principles:
 
 ---
 
-## Verification Summary (Round 4)
+## Verification Summary (Round 5)
 
-All 17 items resolved. Lighthouse accessibility score: **88 → 95 → 95 → 100**. Zero open actionable items. Previously untested gaps (geolocation, thunderstorm button, audio pipeline) all verified PASS.
+New feature (in-app help guide) and PWA icon upgrade verified. Lighthouse accessibility: **100/100** maintained. Zero regressions. Zero open actionable items.
 
-| Item | Round 1 | Round 2 | Round 3 | Round 4 |
-|------|---------|---------|---------|---------|
-| BUG-1: AM/PM toggle date jump | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| BUG-2: Sync to Now button missing | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| BUG-3: Transition sounds muted | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| BUG-4: No "time traveled" label | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| BUG-5: Large phone orientation lock | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| BUG-6: favicon.ico 404 | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| A11Y-0: Color contrast (3 failures) | FAIL | **PARTIAL** (1 resolved, 2 remain) | **FIXED** (Night Time + Clear resolved; AM/PM button new) | **FIXED** (AM/PM button resolved, Lighthouse 100/100) |
-| A11Y-1: Buttons missing aria-label | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| A11Y-2: Missing h1 | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| A11Y-3: SVG not aria-hidden | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| A11Y-4: Toggles missing role=switch | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| UX-1: PWA placeholder icons | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| UX-2: SW not caching audio/weather | PARTIAL | **STILL OPEN** | **WON'T FIX** | **WON'T FIX** |
-| UX-3: No paused indicator | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| UX-4: bg-black on main | FAIL | **FIXED** | **FIXED** | **FIXED** |
-| Cricket autoplay console error | — | **OPEN** | **FIXED** | **FIXED** |
-| A11Y-0: AM/PM button contrast (4.34:1) | — | — | **OPEN** | **FIXED** |
-| GAP: Geolocation + weather | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** |
-| GAP: Thunderstorm button | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** |
-| GAP: Audio pipeline (ambient, transitions, mute) | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** |
+| Item | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 |
+|------|---------|---------|---------|---------|---------|
+| BUG-1: AM/PM toggle date jump | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| BUG-2: Sync to Now button missing | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| BUG-3: Transition sounds muted | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| BUG-4: No "time traveled" label | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| BUG-5: Large phone orientation lock | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| BUG-6: favicon.ico 404 | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| A11Y-0: Color contrast (3 failures) | FAIL | **PARTIAL** (1 resolved, 2 remain) | **FIXED** (Night Time + Clear resolved; AM/PM button new) | **FIXED** (AM/PM button resolved, Lighthouse 100/100) | **FIXED** |
+| A11Y-1: Buttons missing aria-label | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| A11Y-2: Missing h1 | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| A11Y-3: SVG not aria-hidden | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| A11Y-4: Toggles missing role=switch | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| UX-1: PWA placeholder icons | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| UX-2: SW not caching audio/weather | PARTIAL | **STILL OPEN** | **WON'T FIX** | **WON'T FIX** | **WON'T FIX** |
+| UX-3: No paused indicator | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| UX-4: bg-black on main | FAIL | **FIXED** | **FIXED** | **FIXED** | **FIXED** |
+| Cricket autoplay console error | — | **OPEN** | **FIXED** | **FIXED** | **FIXED** |
+| A11Y-0: AM/PM button contrast (4.34:1) | — | — | **OPEN** | **FIXED** | **FIXED** |
+| GAP: Geolocation + weather | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** |
+| GAP: Thunderstorm button | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** |
+| GAP: Audio pipeline (ambient, transitions, mute) | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** |
+| NEW: Help button + overlay | — | — | — | — | **PASS** |
+| NEW: PWA PNG icons (192, 512, apple-touch) | — | — | — | — | **PASS** |
 
 ---
 
@@ -528,17 +531,17 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 
 ## Performance Results (Chrome DevTools CDP)
 
-| Metric | Round 1 | Round 2 | Round 3 | Round 4 | Assessment |
-|--------|---------|---------|---------|---------|------------|
-| LCP | 397 ms | 397 ms | 397 ms | 397 ms | Good (< 2500ms threshold) |
-| CLS | 0.00 | 0.00 | 0.00 | 0.00 | Perfect |
-| TTFB | 218 ms | 218 ms | 218 ms | 218 ms | Acceptable |
-| Render delay | 179 ms | 179 ms | 179 ms | 179 ms | Acceptable |
-| Render-blocking resources | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | Est. 202ms FCP/LCP savings if inlined |
-| Third-party impact | picsum.photos: 5.7kB | None | None | None | Resolved -- icon now served locally |
-| Lighthouse Accessibility | 88/100 | **95/100** | **95/100** | **100/100** | Perfect -- all contrast issues resolved |
-| Lighthouse Best Practices | 100/100 | 100/100 | 100/100 | **96/100** | 1 non-critical failure: geolocation requested on page load (pre-existing UX pattern) |
-| Lighthouse SEO | 100/100 | 100/100 | 100/100 | 100/100 | Pass |
+| Metric | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Assessment |
+|--------|---------|---------|---------|---------|---------|------------|
+| LCP | 397 ms | 397 ms | 397 ms | 397 ms | 397 ms | Good (< 2500ms threshold) |
+| CLS | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | Perfect |
+| TTFB | 218 ms | 218 ms | 218 ms | 218 ms | 218 ms | Acceptable |
+| Render delay | 179 ms | 179 ms | 179 ms | 179 ms | 179 ms | Acceptable |
+| Render-blocking resources | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | Est. 202ms FCP/LCP savings if inlined |
+| Third-party impact | picsum.photos: 5.7kB | None | None | None | None | Resolved -- all icons now served locally |
+| Lighthouse Accessibility | 88/100 | **95/100** | **95/100** | **100/100** | **100/100** | Perfect -- maintained through new feature addition |
+| Lighthouse Best Practices | 100/100 | 100/100 | 100/100 | **96/100** | **96/100** | 1 non-critical failure: geolocation requested on page load (pre-existing UX pattern) |
+| Lighthouse SEO | 100/100 | 100/100 | 100/100 | 100/100 | 100/100 | Pass |
 | CrUX field data | N/A | N/A | No real-user data for this URL |
 
 **Note:** The CSS bundle is render-blocking but served from the service worker cache (near-zero download time), so in practice the 202ms savings estimate only applies to first-ever visits before the SW is active.
@@ -560,8 +563,8 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 
 ## Functional Test Results
 
-| Feature | Tool | Round 1 | Round 2 | Round 3 | Round 4 | Notes |
-|---------|------|---------|---------|---------|---------|-------|
+| Feature | Tool | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Notes |
+|---------|------|---------|---------|---------|---------|---------|-------|
 | Analog clock renders | Both | PASS | PASS | Hour (red), minute (blue), second (green) hands visible |
 | Analog clock hand dragging | CDP | PASS | PASS | Hands are draggable in real browser (pointer events work) |
 | Digital clock displays | Both | PASS | PASS | Color-coded digits, tabular-nums font |
@@ -604,26 +607,55 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 | SVG aria-hidden | dev-browser | FAIL | **PASS** | A11Y-3 fixed -- `aria-hidden="true"` on SVG |
 | Toggle role=switch | dev-browser | FAIL | **PASS** | A11Y-4 fixed -- all 3 toggles have role=switch |
 | h1 present | dev-browser | FAIL | **PASS** | A11Y-2 fixed -- sr-only h1 in DOM |
-| Color contrast | CDP | FAIL | **PARTIAL** | **PARTIAL** | **PASS** | Lighthouse 100/100; AM/PM button `text-slate-600` confirmed |
-| Cricket autoplay on load | CDP | — | **OPEN** | **FIXED** | **FIXED** | No regression; console clean |
-| Weather with geolocation | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | SF: "Los Angeles", 12.8°C, Cloudy. Tokyo: "Tokyo", 9.1°C, Cloudy |
-| Thunderstorm condition + button | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | weathercode=95 → "Thunderstorm" shown; "Play Thunder" appears when unmuted |
-| Ambient audio plays | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | `currentTime` advances after user gesture + unmute |
-| Rooster on 6AM crossing | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | `roosterRef.currentTime = 4.11s > 0` after crossing |
-| Cricket on 6PM crossing | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | `cricketRef.currentTime = 5.71s`, `paused: false` after crossing |
-| Mute/unmute audio cycle | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | `paused` toggles correctly; `currentTime` resumes |
+| Color contrast | CDP | FAIL | **PARTIAL** | **PARTIAL** | **PASS** | **PASS** | Lighthouse 100/100 maintained; no new failures from Help feature |
+| Cricket autoplay on load | CDP | — | **OPEN** | **FIXED** | **FIXED** | **FIXED** | No regression |
+| Weather with geolocation | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** | No regression |
+| Thunderstorm condition + button | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** | No regression |
+| Ambient audio plays | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** | No regression |
+| Rooster on 6AM crossing | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** | No regression |
+| Cricket on 6PM crossing | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** | No regression |
+| Mute/unmute audio cycle | CDP | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** | No regression |
+| Help button visible | CDP | — | — | — | — | **PASS** | `aria-label="Help"` present alongside Settings |
+| Help overlay opens | CDP | — | — | — | — | **PASS** | h2, Features section, How to Use section, PWA tip all in DOM |
+| Help closes via X | CDP | — | — | — | — | **PASS** | `aria-label="Close help"` button dismisses overlay |
+| Help closes via backdrop | CDP | — | — | — | — | **PASS** | Backdrop click dismisses; inner click does not |
+| PWA icon-192.png | CDP | — | — | — | — | **PASS** | HTTP 200, image/png |
+| PWA icon-512.png | CDP | — | — | — | — | **PASS** | HTTP 200, image/png |
+| PWA apple-touch-icon.png | CDP | — | — | — | — | **PASS** | HTTP 200, `<link rel="apple-touch-icon">` in head |
+| PWA manifest icon entries | CDP | — | — | — | — | **PASS** | `icon-192.png` + `icon-512.png` with correct sizes and type |
 
 ---
 
 ## Priority Summary
 
-### Open Items (Round 4)
+### Open Items (Round 5)
 
 | Priority | Item | Description |
 |----------|------|-------------|
 | Won't Fix | UX-2 | SW doesn't cache audio/weather -- platform-managed, outside app scope |
 
 **No actionable open items remain.**
+
+### New Findings (Round 5) — Help Feature + PWA Icons
+
+**Help overlay (in-app guide):** PASS
+- `aria-label="Help"` button present alongside Settings in top-right button row
+- Overlay opens with `h2 "How to Play"`, "🌟 Features" section (4 bullets), "🎮 How to Use" section (4 bullets), and PWA install tip
+- Closes correctly via X button (`aria-label="Close help"`) and via backdrop click
+- `stopPropagation` on modal card prevents accidental dismiss when clicking inside
+- Lighthouse accessibility remains **100/100** — no new contrast or aria failures introduced
+- Button count: 12 base state (Help + Settings + 10 existing), 13 with Help open (+Close help)
+
+**PWA icons upgraded to PNG:** PASS
+- `manifest.json` contains `icon-192.png` (192x192, image/png) and `icon-512.png` (512x512, image/png)
+- All three PNG files return HTTP 200: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`
+- `<link rel="apple-touch-icon" href="/apple-touch-icon.png">` confirmed in `<head>`
+- `icon.svg` still returns HTTP 200 (still referenced as `icons.icon` in `layout.tsx`)
+- No third-party icon requests in network log
+
+**Regression check:** PASS — zero console errors, zero Lighthouse accessibility failures, Settings panel unaffected by button row layout refactor.
+
+### Open Items (Round 4)
 
 ### Open Items (Round 3) — all resolved
 
