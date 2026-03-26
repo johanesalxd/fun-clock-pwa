@@ -230,7 +230,7 @@ function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, className }: 
         <div className="flex flex-col ml-1 sm:ml-2">
           <button 
             onClick={toggleAmPm}
-            className="text-xs sm:text-sm md:text-base font-black text-slate-500 hover:text-slate-900 active:scale-95 transition-all bg-slate-100 hover:bg-slate-200 px-2 py-1 sm:px-3 sm:py-2 rounded-xl"
+            className="text-xs sm:text-sm md:text-base font-black text-slate-600 hover:text-slate-900 active:scale-95 transition-all bg-slate-100 hover:bg-slate-200 px-2 py-1 sm:px-3 sm:py-2 rounded-xl"
           >
             {ampm}
           </button>
