@@ -360,6 +360,7 @@ export default function TimeExplorerApp() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const thunderRef = useRef<HTMLAudioElement>(null);
   const roosterRef = useRef<HTMLAudioElement>(null);
+  const cricketRef = useRef<HTMLAudioElement>(null);
   const prevIsDay = useRef<boolean | null>(null);
 
   // Initial time sync
@@ -499,6 +500,7 @@ export default function TimeExplorerApp() {
     audioRef.current.muted = isMuted;
     if (thunderRef.current) thunderRef.current.muted = isMuted;
     if (roosterRef.current) roosterRef.current.muted = isMuted;
+    if (cricketRef.current) cricketRef.current.muted = isMuted;
     
     if (!isMuted) {
        audioRef.current.play().catch(e => console.log("Audio play blocked", e));
@@ -509,9 +511,26 @@ export default function TimeExplorerApp() {
 
   useEffect(() => {
     if (prevIsDay.current !== null && prevIsDay.current !== isDay) {
-      if (isDay && !isMuted && roosterRef.current) {
-        roosterRef.current.currentTime = 0;
-        roosterRef.current.play().catch(e => console.log("Rooster play blocked", e));
+      if (!isMuted) {
+        if (isDay && roosterRef.current) {
+          roosterRef.current.currentTime = 0;
+          roosterRef.current.play().catch(e => console.log("Rooster play blocked", e));
+          setTimeout(() => {
+            if (roosterRef.current) {
+              roosterRef.current.pause();
+              roosterRef.current.currentTime = 0;
+            }
+          }, 5000);
+        } else if (!isDay && cricketRef.current) {
+          cricketRef.current.currentTime = 0;
+          cricketRef.current.play().catch(e => console.log("Cricket play blocked", e));
+          setTimeout(() => {
+            if (cricketRef.current) {
+              cricketRef.current.pause();
+              cricketRef.current.currentTime = 0;
+            }
+          }, 5000);
+        }
       }
     }
     prevIsDay.current = isDay;
@@ -548,6 +567,7 @@ export default function TimeExplorerApp() {
         <audio ref={audioRef} src={currentAudioUrl} loop />
         <audio ref={thunderRef} src={AUDIO_URLS.thunder} />
         <audio ref={roosterRef} src={AUDIO_URLS.rooster} />
+        <audio ref={cricketRef} src={AUDIO_URLS.night} />
 
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -709,6 +729,10 @@ export default function TimeExplorerApp() {
                         onClick={() => {
                           const audio = new Audio(url);
                           audio.play().catch(e => console.log("Soundboard play blocked", e));
+                          setTimeout(() => {
+                            audio.pause();
+                            audio.currentTime = 0;
+                          }, 5000);
                         }}
                         className="flex items-center gap-2 px-3 py-2 bg-amber-100 border-2 border-amber-300 text-amber-700 rounded-xl shadow-sm hover:bg-amber-200 transition-all active:scale-95 capitalize"
                       >
