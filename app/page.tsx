@@ -56,6 +56,31 @@ export default function TimeExplorerApp() {
 
   const alarmRef = useRef<HTMLAudioElement>(null);
   const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowLangMenu(false);
+      }
+    };
+
+    if (showLangMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showLangMenu]);
 
   const stopAlarm = useCallback(() => {
     if (alarmRef.current) {
@@ -216,7 +241,7 @@ export default function TimeExplorerApp() {
           <div className="flex flex-col items-end gap-3 pointer-events-auto">
             <div className="flex gap-3">
               {appMode === 'clock' && isSupported && (
-                <div className="relative">
+                <div className="relative" ref={langMenuRef}>
                   <div className={cn("flex items-center backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
                     <button
                       aria-label="Speak current time"
@@ -228,6 +253,8 @@ export default function TimeExplorerApp() {
                     <div className={cn("w-px h-6", isDay ? "bg-white/30" : "bg-white/10")} />
                     <button
                       aria-label="Select language"
+                      aria-expanded={showLangMenu}
+                      aria-haspopup="listbox"
                       onClick={() => setShowLangMenu(!showLangMenu)}
                       className={cn("px-2 py-3 rounded-r-full transition-colors flex items-center justify-center min-w-[40px]", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
                     >
@@ -236,20 +263,29 @@ export default function TimeExplorerApp() {
                   </div>
                   
                   {showLangMenu && (
-                    <div className={cn("absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border backdrop-blur-xl overflow-hidden z-50", isDay ? "bg-white/90 border-white/50" : "bg-slate-800/90 border-slate-700")}>
+                    <div 
+                      role="listbox"
+                      className={cn("absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border backdrop-blur-xl overflow-hidden z-50", isDay ? "bg-white/90 border-white/50" : "bg-slate-800/90 border-slate-700")}
+                    >
                       <button 
+                        role="option"
+                        aria-selected={language === 'en-US'}
                         onClick={() => { setLanguage('en-US'); setShowLangMenu(false); }}
                         className={cn("w-full text-left px-4 py-3 text-sm font-medium transition-colors", isDay ? "text-slate-800 hover:bg-slate-100" : "text-slate-200 hover:bg-slate-700", language === 'en-US' && (isDay ? "bg-slate-100" : "bg-slate-700"))}
                       >
                         English (US)
                       </button>
                       <button 
+                        role="option"
+                        aria-selected={language === 'en-GB'}
                         onClick={() => { setLanguage('en-GB'); setShowLangMenu(false); }}
                         className={cn("w-full text-left px-4 py-3 text-sm font-medium transition-colors", isDay ? "text-slate-800 hover:bg-slate-100" : "text-slate-200 hover:bg-slate-700", language === 'en-GB' && (isDay ? "bg-slate-100" : "bg-slate-700"))}
                       >
                         English (UK)
                       </button>
                       <button 
+                        role="option"
+                        aria-selected={language === 'id-ID'}
                         onClick={() => { setLanguage('id-ID'); setShowLangMenu(false); }}
                         className={cn("w-full text-left px-4 py-3 text-sm font-medium transition-colors", isDay ? "text-slate-800 hover:bg-slate-100" : "text-slate-200 hover:bg-slate-700", language === 'id-ID' && (isDay ? "bg-slate-100" : "bg-slate-700"))}
                       >

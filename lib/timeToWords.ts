@@ -36,7 +36,7 @@ function formatBritish(hours: number, minutes: number): string {
   const nextH12 = (hours + 1) % 12 || 12;
 
   if (minutes === 0) {
-    return `It's ${h12} o'clock`;
+    return `It's ${h12} o'clock ${period}`;
   } else if (minutes === 15) {
     return `It's quarter past ${h12} ${period}`;
   } else if (minutes === 30) {

@@ -26,7 +26,12 @@ export function useSpeakTime() {
     
     // Try to find a voice that matches the language
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => v.lang.startsWith(language) || v.lang.replace('_', '-').startsWith(language) || v.lang.startsWith(language.split('-')[0]));
+    const voice = 
+      voices.find(v => v.lang === language) ||
+      voices.find(v => v.lang.replace('_', '-') === language) ||
+      voices.find(v => v.lang.startsWith(language)) ||
+      voices.find(v => v.lang.startsWith(language.split('-')[0]));
+      
     if (voice) {
       utterance.voice = voice;
     }
