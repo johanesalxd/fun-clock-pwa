@@ -183,6 +183,10 @@ export default function TimeExplorerApp() {
         <RotateCcw className="w-16 h-16 mb-6 animate-[spin_3s_linear_infinite]" />
         <h2 className="text-2xl font-black text-center px-4">Please rotate your phone to portrait mode.</h2>
       </div>
+      <div className="fixed inset-0 z-[100] bg-slate-900 text-white flex-col items-center justify-center hidden [@media(min-width:768px)_and_(orientation:portrait)]:flex">
+        <RotateCcw className="w-16 h-16 mb-6 animate-[spin_3s_linear_infinite]" />
+        <h2 className="text-2xl font-black text-center px-4">Please rotate your tablet to landscape mode.</h2>
+      </div>
 
       <div className={cn("h-full w-full flex flex-col relative transition-colors duration-1000 shadow-2xl", bgClass, textColor)}>
         <WeatherOverlay condition={weatherCondition} isDay={isDay} />

@@ -38,7 +38,7 @@ export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, altern
   const toggleAmPm = () => {
     onChangeTime((prev: number) => {
       const d = new Date(prev);
-      d.setHours(d.getHours() + 12);
+      d.setHours(d.getHours() >= 12 ? d.getHours() - 12 : d.getHours() + 12);
       return d.getTime();
     });
   };

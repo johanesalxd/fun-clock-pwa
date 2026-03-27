@@ -15,7 +15,7 @@ export function Toggle({ label, checked, onChange, color }: any) {
       <div className={cn("w-10 h-6 rounded-full flex items-center px-1 transition-colors", checked ? colorClasses : "bg-slate-300")}>
         <div className={cn("w-4 h-4 rounded-full bg-white shadow-sm transition-transform", checked ? "translate-x-4" : "translate-x-0")} />
       </div>
-      <input type="checkbox" role="switch" aria-checked={checked} className="hidden" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <input type="checkbox" role="switch" aria-checked={checked} className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} />
     </label>
   );
 }
