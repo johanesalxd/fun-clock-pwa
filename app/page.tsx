@@ -16,7 +16,7 @@ const getSvgPoint = (e: React.PointerEvent | PointerEvent, svg: SVGSVGElement) =
   return pt.matrixTransform(svg.getScreenCTM()!.inverse());
 };
 
-function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying }: any) {
+function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying, fullSecondsCircle }: any) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeHand, setActiveHand] = useState<'hour' | 'minute' | 'second' | null>(null);
   const lastAngleRef = useRef<number>(0);
@@ -70,11 +70,12 @@ function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying }: a
 
   const date = new Date(time);
   const ms = date.getMilliseconds();
-  const s = date.getSeconds() + ms / 1000;
-  const m = date.getMinutes() + s / 60;
-  const h = date.getHours() % 12 + m / 60;
+  const s = activeHand === 'second' ? date.getSeconds() + ms / 1000 : date.getSeconds();
+  const m = date.getMinutes() + ms / 60000;
+  const h = date.getHours() % 12 + ms / 3600000;
 
-  const secondAngle = s * 6;
+  // Ensure second hand points exactly to 0 when seconds are 0
+  const secondAngle = s === 60 || s === 0 ? 0 : s * 6;
   const minuteAngle = m * 6;
   const hourAngle = h * 30;
 
@@ -108,20 +109,31 @@ function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying }: a
     <svg aria-hidden="true" ref={svgRef} viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl bg-white rounded-full" style={{ touchAction: 'none' }}>
       <defs>
         <linearGradient id="minSecGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3b82f6" />
-          <stop offset="100%" stopColor="#22c55e" />
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#3b82f6" />
         </linearGradient>
       </defs>
       <circle cx="50" cy="50" r="49" fill="none" stroke="#f8fafc" strokeWidth="2" />
       <circle cx="50" cy="50" r="48" fill="#ffffff" />
       
-      {Array.from({ length: 12 }).map((_, i) => {
-        const m = i === 0 ? 60 : i * 5;
-        const angle = (i * 30) * (Math.PI / 180);
-        const x = 50 + Math.sin(angle) * 45;
-        const y = 50 - Math.cos(angle) * 45;
-        return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="4" fill="url(#minSecGradient)" fontWeight="900" className="select-none pointer-events-none">{m}</text>;
-      })}
+      {fullSecondsCircle ? (
+        Array.from({ length: 60 }).map((_, i) => {
+          const m = i === 0 ? 60 : i;
+          const angle = (i * 6) * (Math.PI / 180);
+          const x = 50 + Math.sin(angle) * 45;
+          const y = 50 - Math.cos(angle) * 45;
+          const isFive = i % 5 === 0;
+          return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={isFive ? "3" : "2"} fill="url(#minSecGradient)" fontWeight={isFive ? "900" : "600"} className="select-none pointer-events-none">{m}</text>;
+        })
+      ) : (
+        Array.from({ length: 12 }).map((_, i) => {
+          const m = i === 0 ? 60 : i * 5;
+          const angle = (i * 30) * (Math.PI / 180);
+          const x = 50 + Math.sin(angle) * 45;
+          const y = 50 - Math.cos(angle) * 45;
+          return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="4" fill="url(#minSecGradient)" fontWeight="900" className="select-none pointer-events-none">{m}</text>;
+        })
+      )}
 
       {Array.from({ length: 60 }).map((_, i) => {
         const isHour = i % 5 === 0;
@@ -138,7 +150,7 @@ function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying }: a
         const angle = (i * 30) * (Math.PI / 180);
         const x = 50 + Math.sin(angle) * 31;
         const y = 50 - Math.cos(angle) * 31;
-        return <text key={`h-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="9" fill="#ef4444" fontWeight="900" className="select-none pointer-events-none">{h}</text>;
+        return <text key={`h-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="9" fill="#22c55e" fontWeight="900" className="select-none pointer-events-none">{h}</text>;
       })}
 
       {is24Hour && Array.from({ length: 12 }).map((_, i) => {
@@ -146,12 +158,12 @@ function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying }: a
         const angle = (i * 30) * (Math.PI / 180);
         const x = 50 + Math.sin(angle) * 21;
         const y = 50 - Math.cos(angle) * 21;
-        return <text key={`h24-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="4.5" fill="#991b1b" opacity="0.8" fontWeight="800" className="select-none pointer-events-none">{h}</text>;
+        return <text key={`h24-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="4.5" fill="#166534" opacity="0.8" fontWeight="800" className="select-none pointer-events-none">{h}</text>;
       })}
 
-      {drawHand(hourAngle, 22, 3.5, '#ef4444', 'hour')}
-      {drawHand(minuteAngle, 35, 2.5, '#3b82f6', 'minute')}
-      {showSeconds && drawHand(secondAngle, 41, 1, '#22c55e', 'second')}
+      {drawHand(hourAngle, 22, 3.5, '#22c55e', 'hour')}
+      {drawHand(minuteAngle, 35, 2.5, '#ef4444', 'minute')}
+      {showSeconds && drawHand(secondAngle, 41, 1, '#3b82f6', 'second')}
       
       <circle cx="50" cy="50" r="2" fill="#1e293b" className="pointer-events-none" />
       <circle cx="50" cy="50" r="1" fill="#ffffff" className="pointer-events-none" />
@@ -180,7 +192,7 @@ const TimeColumn = ({ value, unit, colorClass, addTime }: { value: string, unit:
   </div>
 );
 
-function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, className }: any) {
+function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, className }: any) {
   const date = new Date(time);
   
   const addTime = (amount: number, unit: 'hour' | 'minute' | 'second') => {
@@ -210,32 +222,58 @@ function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, className }: 
     h = h % 12;
     if (h === 0) h = 12;
   }
-  const m = date.getMinutes();
-  const s = date.getSeconds();
+  let m = date.getMinutes();
+  let s = date.getSeconds();
+
+  if (alternateMode) {
+    if (s === 0) {
+      s = 60;
+      m -= 1;
+      if (m < 0) {
+        m = 59;
+        h -= 1;
+        if (h < 0) h = 23;
+        if (!is24Hour && h === 0) h = 12;
+      }
+    }
+    if (m === 0 && s === 60) {
+      m = 60;
+      h -= 1;
+      if (h < 0) h = 23;
+      if (!is24Hour && h === 0) h = 12;
+    }
+  }
 
   const pad = (n: number) => n.toString().padStart(2, '0');
 
   return (
-    <div className={cn("flex items-center justify-center gap-1 sm:gap-2 bg-white/90 backdrop-blur-xl p-2 sm:p-4 rounded-3xl shadow-2xl border-4 border-white/50", className)}>
-      <TimeColumn value={is24Hour ? pad(h) : h.toString()} unit="hour" colorClass="text-red-500" addTime={addTime} />
-      <div className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-300 pb-1 animate-pulse">:</div>
-      <TimeColumn value={pad(m)} unit="minute" colorClass="text-blue-500" addTime={addTime} />
-      {showSeconds && (
-        <>
-          <div className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-300 pb-1 animate-pulse" style={{ animationDelay: '500ms' }}>:</div>
-          <TimeColumn value={pad(s)} unit="second" colorClass="text-green-700" addTime={addTime} />
-        </>
-      )}
-      {!is24Hour && (
-        <div className="flex flex-col ml-1 sm:ml-2">
-          <button 
-            onClick={toggleAmPm}
-            className="text-xs sm:text-sm md:text-base font-black text-slate-600 hover:text-slate-900 active:scale-95 transition-all bg-slate-100 hover:bg-slate-200 px-2 py-1 sm:px-3 sm:py-2 rounded-xl"
-          >
-            {ampm}
-          </button>
-        </div>
-      )}
+    <div className={cn("flex flex-col items-center justify-center gap-1 sm:gap-2 bg-white/90 backdrop-blur-xl p-2 sm:p-4 rounded-3xl shadow-2xl border-4 border-white/50", className)}>
+      <div className="flex items-center justify-center gap-1 sm:gap-2">
+        <TimeColumn value={is24Hour ? pad(h) : h.toString()} unit="hour" colorClass="text-green-600" addTime={addTime} />
+        <div className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-300 pb-1 animate-pulse">:</div>
+        <TimeColumn value={pad(m)} unit="minute" colorClass="text-red-500" addTime={addTime} />
+        {showSeconds && (
+          <>
+            <div className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-300 pb-1 animate-pulse" style={{ animationDelay: '500ms' }}>:</div>
+            <TimeColumn value={pad(s)} unit="second" colorClass="text-blue-500" addTime={addTime} />
+          </>
+        )}
+        {!is24Hour && (
+          <div className="flex flex-col ml-1 sm:ml-2">
+            <button 
+              onClick={toggleAmPm}
+              className="text-xs sm:text-sm md:text-base font-black text-slate-600 hover:text-slate-900 active:scale-95 transition-all bg-slate-100 hover:bg-slate-200 px-2 py-1 sm:px-3 sm:py-2 rounded-xl"
+            >
+              {ampm}
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="flex gap-4 sm:gap-8 text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
+        <span className="text-green-600/70">Hours</span>
+        <span className="text-red-500/70">Minutes</span>
+        {showSeconds && <span className="text-blue-500/70">Seconds</span>}
+      </div>
     </div>
   );
 }
@@ -267,7 +305,8 @@ function Toggle({ label, checked, onChange, color }: any) {
     red: 'bg-red-500',
     green: 'bg-green-500',
     blue: 'bg-blue-500',
-  }[color as 'red'|'green'|'blue'];
+    yellow: 'bg-yellow-500',
+  }[color as 'red'|'green'|'blue'|'yellow'];
 
   return (
     <label className="flex items-center justify-between cursor-pointer bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
@@ -363,6 +402,8 @@ export default function TimeExplorerApp() {
   const [is24Hour, setIs24Hour] = useState(false);
   const [showSeconds, setShowSeconds] = useState(true);
   const [showDate, setShowDate] = useState(true);
+  const [alternateMode, setAlternateMode] = useState(false);
+  const [fullSecondsCircle, setFullSecondsCircle] = useState(true);
 
   const [stars, setStars] = useState<any[]>([]);
 
@@ -376,6 +417,7 @@ export default function TimeExplorerApp() {
   const roosterRef = useRef<HTMLAudioElement>(null);
   const cricketRef = useRef<HTMLAudioElement>(null);
   const prevIsDay = useRef<boolean | null>(null);
+  const prevTimeRef = useRef<number | null>(null);
 
   // Initial time sync
   useEffect(() => {
@@ -532,20 +574,25 @@ export default function TimeExplorerApp() {
   useEffect(() => {
     if (!mounted) return;
     if (prevIsDay.current !== null && prevIsDay.current !== isDay) {
-      if (isDay) {
-        if (roosterRef.current) {
-          roosterRef.current.currentTime = 0;
-          roosterRef.current.play().catch(e => console.log("Rooster play blocked", e));
-        }
-      } else {
-        if (cricketRef.current) {
-          cricketRef.current.currentTime = 0;
-          cricketRef.current.play().catch(e => console.log("Cricket play blocked", e));
+      // Only play sounds if time is moving forward
+      const isMovingForward = time > (prevTimeRef.current || 0);
+      if (isMovingForward) {
+        if (isDay) {
+          if (roosterRef.current) {
+            roosterRef.current.currentTime = 0;
+            roosterRef.current.play().catch(e => console.log("Rooster play blocked", e));
+          }
+        } else {
+          if (cricketRef.current) {
+            cricketRef.current.currentTime = 0;
+            cricketRef.current.play().catch(e => console.log("Cricket play blocked", e));
+          }
         }
       }
     }
     prevIsDay.current = isDay;
-  }, [isDay, mounted]);
+    prevTimeRef.current = time;
+  }, [isDay, mounted, time]);
 
   const bgClass = isDay ? 'bg-sky-300' : 'bg-indigo-950';
   const textColor = isDay ? 'text-slate-800' : 'text-slate-100';
@@ -662,6 +709,7 @@ export default function TimeExplorerApp() {
                 showSeconds={showSeconds} 
                 is24Hour={is24Hour} 
                 isPlaying={isPlaying}
+                fullSecondsCircle={fullSecondsCircle}
               />
             </div>
           </div>
@@ -674,6 +722,7 @@ export default function TimeExplorerApp() {
               onChangeTime={handleTimeChange} 
               showSeconds={showSeconds} 
               is24Hour={is24Hour}
+              alternateMode={alternateMode}
               className="w-full md:w-1/2 md:flex-1"
             />
 
@@ -830,9 +879,11 @@ export default function TimeExplorerApp() {
                 <div className="flex flex-col gap-2">
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Display</h3>
                   <div className="flex flex-col gap-2">
-                    <Toggle label="24-Hour Time" checked={is24Hour} onChange={setIs24Hour} color="red" />
-                    <Toggle label="Show Seconds" checked={showSeconds} onChange={setShowSeconds} color="green" />
-                    <Toggle label="Show Date" checked={showDate} onChange={setShowDate} color="blue" />
+                    <Toggle label="24-Hour Time" checked={is24Hour} onChange={setIs24Hour} color="green" />
+                    <Toggle label="Show Seconds" checked={showSeconds} onChange={setShowSeconds} color="blue" />
+                    <Toggle label="Show Date" checked={showDate} onChange={setShowDate} color="yellow" />
+                    <Toggle label="Alternate Mode (00-60)" checked={alternateMode} onChange={setAlternateMode} color="yellow" />
+                    <Toggle label="Full Seconds Circle" checked={fullSecondsCircle} onChange={setFullSecondsCircle} color="yellow" />
                   </div>
                 </div>
               </div>

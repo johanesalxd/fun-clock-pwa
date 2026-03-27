@@ -4,8 +4,8 @@ A beautiful, interactive clock application designed for kids (and adults!) to ex
 
 ## Features
 
-- **Interactive Analog Clock**: Drag the hands to change the time and see the world transform. Includes a "PAUSED" indicator when time is manually adjusted.
-- **Digital Clock Controls**: Fully keyboard-accessible buttons to finely adjust hours, minutes, seconds, and toggle AM/PM (without changing the date).
+- **Interactive Analog Clock**: Drag the hands independently (hours, minutes, seconds) to change the time and see the world transform. The second hand ticks exactly on the second like a quartz watch. Includes a "PAUSED" indicator when time is manually adjusted.
+- **Digital Clock Controls**: Fully keyboard-accessible buttons to finely adjust hours, minutes, seconds, and toggle AM/PM. Color-coded for clarity (Green: Hours, Red: Minutes, Blue: Seconds) with a helpful legend.
 - **Real-time Weather Integration**: Automatically fetches weather based on your location (or defaults to sunny/clear).
 - **Dynamic Environments**:
   - **Day/Night Cycle**: The sky changes from bright blue to deep indigo based on the time.
@@ -16,7 +16,7 @@ A beautiful, interactive clock application designed for kids (and adults!) to ex
   - **Transition Sounds**: A rooster crows at sunrise (6:00 AM) and crickets chirp at sunset (6:00 PM).
   - **Manual Thunder**: Click the thunder button during storms to hear a strike.
 - **Soundboard**: A dedicated section in settings to play any of the app's sounds manually.
-- **Customizable Display**: Toggle between 12/24 hour time, show/hide seconds, and show/hide the date.
+- **Customizable Display**: Toggle between 12/24 hour time, show/hide seconds, show/hide the date, enable Alternate Mode (00-60), and toggle the Full Seconds Circle (1-60). Settings toggles are color-coded to match the clock hands.
 - **Progressive Web App (PWA)**: Installable on mobile and desktop devices with custom maskable icons. Fully supports "Add to Home Screen" on iOS/iPadOS via Safari or Chrome.
 - **Accessible Design (A11Y)**: High-contrast UI elements, comprehensive ARIA labels, screen-reader-friendly toggles, and semantic HTML structure.
 - **Smart Orientation Locks**: Prompts users to rotate their devices (portrait for phones, landscape for tablets) for the optimal viewing experience.
@@ -74,7 +74,7 @@ Available in the Settings menu, the soundboard lets you manually trigger any sou
 
 ## Testing & Quality Assurance (QA)
 
-This application has undergone a rigorous, 4-round automated QA process driven by AI agents using headless Playwright and Chrome DevTools Protocol (CDP). 
+This application has undergone a rigorous, 5-round automated QA process driven by AI agents using headless Playwright and Chrome DevTools Protocol (CDP). 
 
 **Key Highlights:**
 - **Accessibility & Performance:** Achieved a perfect **100/100 Lighthouse Accessibility score**, alongside excellent scores in SEO and Best Practices.

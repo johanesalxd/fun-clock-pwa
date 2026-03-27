@@ -62,7 +62,7 @@ A Chrome DevTools Protocol bridge that connects to a live Chrome instance runnin
 
 ### Testing Workflow
 
-This project used a **4-round iterative QA cycle**:
+This project used a **5-round iterative QA cycle**:
 
 ```
 Round 1: Discovery
@@ -78,6 +78,10 @@ Round 2-3: Verification
 Round 4: Gap Coverage + Final Verification
   CDP          → test previously untestable features using advanced techniques
   Output       → final report, zero open actionable items
+
+Round 5: Feature Additions + Verification
+  dev-browser  → test new features (Help, Alternate Mode, Full Seconds Circle)
+  Output       → updated report with NEW items and verification
 ```
 
 ---
@@ -188,6 +192,10 @@ New feature (in-app help guide) and PWA icon upgrade verified. Lighthouse access
 | GAP: Audio pipeline (ambient, transitions, mute) | NOT TESTED | NOT TESTED | NOT TESTED | **PASS** | **PASS** |
 | NEW: Help button + overlay | — | — | — | — | **PASS** |
 | NEW: PWA PNG icons (192, 512, apple-touch) | — | — | — | — | **PASS** |
+| NEW: Alternate Mode (00-60) | — | — | — | — | **PASS** |
+| NEW: Full Seconds Circle | — | — | — | — | **PASS** |
+| BUG: Analog clock second hand accuracy | — | — | — | — | **FIXED** |
+| BUG: Rooster sound at 6 PM | — | — | — | — | **FIXED** |
 
 ---
 
