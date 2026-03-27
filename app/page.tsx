@@ -334,7 +334,7 @@ export default function TimeExplorerApp() {
                       <div className={cn("w-px h-6", isDay ? "bg-white/30" : "bg-white/10")} />
                     </div>
                     <button
-                      aria-label="Select language"
+                      aria-label={`${language === 'en-US' ? 'EN' : language === 'en-GB' ? 'UK' : 'ID'} - Select language`}
                       aria-expanded={showLangMenu}
                       aria-haspopup="listbox"
                       onClick={() => setShowLangMenu(!showLangMenu)}

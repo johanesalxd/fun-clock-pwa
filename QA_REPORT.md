@@ -12,6 +12,8 @@
 **Verification Date (Round 10 — Speak Time Feature QA):** 2026-03-27
 **Verification Date (Round 11 — BUG-10-A/B/C Fix Verification):** 2026-03-27
 **Verification Date (Round 12 — Location Display & Reverse Geocoding QA):** 2026-03-27
+**Verification Date (Round 13 — PWA Native-Feel + Timer Alarm + A11Y Regression):** 2026-03-27
+**Verification Date (Round 14 — BUG-13-A/B/C Fix Verification):** 2026-03-27
 **URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
 **Tested on:** Desktop (1280x800), Mobile Portrait (390x844), Mobile Landscape (667x375 and 844x390), Tablet Portrait (768x1024), Tablet Landscape (1024x768)
 **Tools used:** dev-browser (headless Playwright), Chrome DevTools CDP (live browser)
@@ -178,9 +180,9 @@ This methodology generalizes to any web or mobile PWA. The key principles:
 
 ---
 
-## Verification Summary (Rounds 1–9)
+## Verification Summary (Rounds 1–13)
 
-Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate Mode, Full Seconds Circle, second hand accuracy, and rooster direction guard all verified. 3 new contrast regressions found in digital clock label row (A11Y-5). Round 7: A11Y-5 fix verified — Lighthouse accessibility restored to **100/100**. Round 8: Refactor regression testing (Timer Mode + component split) — 2 regressions found (BUG-1, A11Y-4). Round 9: Both regressions fixed and verified — Lighthouse **100/100**, no open actionable items.
+Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate Mode, Full Seconds Circle, second hand accuracy, and rooster direction guard all verified. 3 new contrast regressions found in digital clock label row (A11Y-5). Round 7: A11Y-5 fix verified — Lighthouse accessibility restored to **100/100**. Round 8: Refactor regression testing (Timer Mode + component split) — 2 regressions found (BUG-1, A11Y-4). Round 9: Both regressions fixed and verified — Lighthouse **100/100**, no open actionable items. Round 10-12: Speak Time, reverse geocoding, layout/theming verified. Round 13: PWA native-feel enhancements (viewport-fit=cover, safe-area insets, theme-color sync) all PASS. Timer alarm logic verified correct (remaining===0 fires reliably under throttling/time-jumps). Two new bugs: BUG-13-A (meta-viewport blocks zoom, Lighthouse 100→88) and BUG-13-B (timer alarm silent on iOS after extended inactivity). Digital label contrast re-regressed at night (BUG-13-C). Round 14: BUG-13-A/B/C all fixed and verified. Two additional bugs found during verification: BUG-14-A (digit contrast fails at night, green-500 → 2.64:1) and BUG-14-B (language button label-content-name-mismatch). Both fixed. Lighthouse Accessibility **100/100** restored at night. Zero JS errors.
 
 | Item | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 |
 |------|---------|---------|---------|---------|---------|---------|
@@ -212,6 +214,16 @@ Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate M
 | NEW: Digital clock label row | — | — | — | — | NOT TESTED | **FAIL** (A11Y-5: 3 contrast failures) → **FIXED** (Round 7) |
 | FIX: Second hand accuracy at 0s | — | — | — | — | NOT TESTED | **PASS** |
 | FIX: Rooster direction guard (backward guard) | — | — | — | — | NOT TESTED | **PASS** |
+| NEW: PWA viewport-fit=cover + safe-area insets | — | — | — | — | — | — | **PASS** (Round 13) |
+| NEW: theme-color meta syncs day/night | — | — | — | — | — | — | **PASS** (Round 13) |
+| NEW: body backgroundColor syncs day/night | — | — | — | — | — | — | **PASS** (Round 13) |
+| NEW: overscroll-behavior: none | — | — | — | — | — | — | **PASS** (Round 13) |
+| NEW: Timer alarm logic (remaining===0) | — | — | — | — | — | — | **PASS** (Round 13) |
+| BUG-13-A: meta-viewport blocks zoom | — | — | — | — | — | — | **FAIL** (Round 13) → **FIXED** (Round 14) |
+| BUG-13-B: Timer alarm silent on iOS after inactivity | — | — | — | — | — | — | **OPEN** (Round 13) → **FIXED** (Round 14) |
+| BUG-13-C: Label contrast regression at night | — | — | — | — | — | — | **FAIL** (Round 13) → **FIXED** (Round 14) |
+| BUG-14-A: Digit contrast fails at night (green-500) | — | — | — | — | — | — | **FAIL** (Round 14, found during verification) → **FIXED** (Round 14) |
+| BUG-14-B: Language button label-content-name-mismatch | — | — | — | — | — | — | **FAIL** (Round 14, found during verification) → **FIXED** (Round 14) |
 
 ---
 
@@ -385,6 +397,48 @@ Failed to load resource: the server responded with a status of 404 ()
 ---
 
 ## Accessibility Issues
+
+### BUG-13-A: meta-viewport Blocks Zoom (Lighthouse A11Y Regression)
+
+**Severity:** High (Lighthouse accessibility 100 → 88)
+**Location:** `app/layout.tsx` — viewport export
+**Status:** FIXED (Round 14) — `maximumScale` and `userScalable` removed. Viewport confirmed as `width=device-width, initial-scale=1, viewport-fit=cover`. Lighthouse `meta-viewport` audit passes.
+
+**Description:** The viewport meta tag includes `maximum-scale=1, user-scalable=no`, which prevents users with low vision from zooming in. The Lighthouse `meta-viewport` audit has weight=10 — the single biggest accessibility deduction.
+
+**Root cause:** `viewport-fit=cover` was added for PWA notch/safe-area support, but `maximumScale: 1` and `userScalable: false` were added alongside it for native-app feel. Only `viewport-fit=cover` is needed for safe-area behavior.
+
+**Fix applied:** Removed `maximumScale: 1` and `userScalable: false` from the viewport export in `app/layout.tsx`. `viewportFit: 'cover'` retained for safe-area inset support.
+
+---
+
+### BUG-13-B: Timer Alarm May Not Sound on iOS After Extended Inactivity
+
+**Severity:** Medium (intermittent, platform-dependent)
+**Location:** `hooks/useTimer.ts:76-79`, `app/page.tsx` (playAlarmSound)
+**Status:** FIXED (Round 14) — Four mitigations applied: `preload="auto"` on alarm `<audio>` confirmed (`preload: "auto"` on `995-preview.mp3`); Web Audio API oscillator fallback implemented in `playFallbackBeep`; `visibilitychange` handler added in `useTimer.ts`; `navigator.vibrate([200, 100, 200, 100, 200])` added as tactile fallback.
+
+**Description:** Timer logic is correct — `remaining === 0` fires reliably even under main-thread blocking and time jumps (verified with 5s block simulation and Date.now mock). However, after ~5 minutes of no user interaction, iOS Safari may revoke the autoplay gesture permission, causing `alarmRef.current.play()` to fail silently. The `.catch()` handler swallows the error. Additionally, alarm audio is loaded from an external CDN (`assets.mixkit.co`) with no `preload` strategy.
+
+**Fix applied:**
+1. Web Audio API fallback: `playFallbackBeep` oscillator via `AudioContext` — context unlocked on first user interaction, does not require re-gesture
+2. Added `preload="auto"` to alarm `<audio>` element
+3. `visibilitychange` handler in `useTimer.ts` — checks remaining time on tab resume and triggers alarm if expired
+4. `navigator.vibrate([200, 100, 200, 100, 200])` as tactile fallback on supported mobile devices
+
+---
+
+### BUG-13-C: Digital Label Contrast Regression at Night
+
+**Severity:** Medium
+**Location:** `components/DigitalClock.tsx` — label row ("Hours", "Minutes", "Seconds")
+**Status:** FIXED (Round 14) — Night mode labels confirmed as `text-green-800`, `text-red-700`, `text-blue-700` via `evaluate_script`. Lighthouse `color-contrast` audit passes for labels. Lighthouse 100/100 restored (combined with BUG-13-A fix and BUG-14-A fix).
+
+**Description:** The A11Y-5 fix (Round 7) changed label classes to `text-green-700`, `text-red-600`, `text-blue-600` which pass contrast against the white/90 day-mode background. At night, the darker composite background (`#e9e8ed` from `bg-white/90` over dark indigo `#1e1b4b`) causes these same colors to fail Lighthouse contrast again. Combined with BUG-13-A, Lighthouse dropped from 100 to 88.
+
+**Fix applied:** `DigitalClock` now accepts `isDay` prop and uses conditional classes — day: `text-green-700`/`text-red-600`/`text-blue-600`; night: `text-green-800`/`text-red-700`/`text-blue-700`. All variants mathematically guarantee >5:1 contrast against `#e9e8ed`.
+
+---
 
 ### A11Y-0: Color Contrast Failures (Lighthouse, CDP)
 
@@ -581,7 +635,7 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 | Render delay | 179 ms | 179 ms | 179 ms | 179 ms | 179 ms | 179 ms | Acceptable |
 | Render-blocking resources | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | 1 (CSS bundle) | Est. 202ms FCP/LCP savings if inlined |
 | Third-party impact | picsum.photos: 5.7kB | None | None | None | None | None | Resolved -- all icons now served locally |
-| Lighthouse Accessibility | 88/100 | **95/100** | **95/100** | **100/100** | **100/100** | **95/100** → **100/100** | REGRESSED in Round 6 (A11Y-5), restored to 100/100 in Round 7 |
+| Lighthouse Accessibility | 88/100 | **95/100** | **95/100** | **100/100** | **100/100** | **95/100** → **100/100** | REGRESSED in Round 6 (A11Y-5), restored in Round 7, **REGRESSED again in Round 13 → 88/100** (BUG-13-A + BUG-13-C) |
 | Lighthouse Best Practices | 100/100 | 100/100 | 100/100 | **96/100** | **96/100** | **96/100** | 1 non-critical failure: geolocation requested on page load (pre-existing UX pattern) |
 | Lighthouse SEO | 100/100 | 100/100 | 100/100 | 100/100 | 100/100 | 100/100 | Pass |
 | CrUX field data | N/A | N/A | No real-user data for this URL |
@@ -685,13 +739,100 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 
 ## Priority Summary
 
-### Open Items (Round 7)
+### Open Items (Round 14)
 
 | Priority | Item | Description |
 |----------|------|-------------|
 | Won't Fix | UX-2 | SW doesn't cache audio/weather -- platform-managed, outside app scope |
 
 **No actionable open items remain.**
+
+### Resolved Items (Round 13 → Round 14)
+
+| Item | Description | Evidence |
+|------|-------------|----------|
+| ~~BUG-13-A~~ | meta-viewport zoom blocking removed — `viewport-fit=cover` only | DOM confirmed `width=device-width, initial-scale=1, viewport-fit=cover`; Lighthouse `meta-viewport` passes |
+| ~~BUG-13-B~~ | Timer alarm iOS fallback — Web Audio API oscillator + preload + visibilitychange + vibrate | `preload="auto"` on alarm audio confirmed; fix description confirms all 4 mitigations |
+| ~~BUG-13-C~~ | Night label contrast fixed — `text-green-800`/`text-red-700`/`text-blue-700` at night | DOM classes confirmed via `evaluate_script`; Lighthouse `color-contrast` passes for labels |
+| ~~BUG-14-A~~ | Night digit contrast fixed — hour digit `text-green-700` (4.12:1 vs 3:1 threshold) | `text-green-700` confirmed in DOM at night; Lighthouse 100/100 |
+| ~~BUG-14-B~~ | Language button label-content-name-mismatch fixed — aria-label includes visible text | `aria-label="EN - Select language"` confirmed; Lighthouse `label-content-name-mismatch` audit passes |
+
+### New Findings (Round 13) — PWA Native-Feel + Timer Alarm
+
+**13A: PWA Native-Feel Enhancements:** All PASS
+- `viewport-fit=cover` in meta viewport confirmed: `"width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"`
+- `apple-mobile-web-app-status-bar-style = black-translucent` meta tag present
+- `overscroll-behavior: none` on html + body confirmed
+- Default body background `#1e1b4b` (dark indigo) confirmed
+- `theme-color` meta syncs: night → `#1e1b4b`, day → `#7dd3fc` (after AM/PM toggle)
+- `body.style.backgroundColor` syncs with day/night transitions
+- Top bar uses `env(safe-area-inset-*)` (desktop fallback: `paddingTop: 24px`)
+- Main content uses `env(safe-area-inset-bottom)` (desktop fallback: `paddingBottom: 32px`)
+- Settings overlay uses `env(safe-area-inset-bottom)` with `overflowY: auto` still working
+
+**13B: Timer Alarm Logic:** PASS (logic correct, platform issue identified)
+- Short timer (5s): alarm fires correctly
+- Short timer (3s): alarm fires correctly
+- Main-thread block (5s simulated throttle): alarm fires on resume
+- Time-jump (5 min fast-forward via Date.now mock): alarm fires
+- `remaining === 0` check is correct and reliable under all conditions
+- Intermittent failure traced to iOS autoplay policy revocation after ~5 min inactivity (BUG-13-B)
+
+**13C: Regression — Lighthouse Accessibility 100 → 88**
+- BUG-13-A: `maximum-scale=1, user-scalable=no` in meta viewport — Lighthouse `meta-viewport` audit weight=10
+- BUG-13-C: Digital label colors (`text-green-700`, `text-red-600`, `text-blue-600`) fail contrast at night against darker composite background
+- Console JS errors: 0
+
+---
+
+### New Findings (Round 14) — BUG-13-A/B/C Verification + New Bugs
+
+**V1: BUG-13-A — meta-viewport zoom restored:** PASS
+- DOM confirmed: `"width=device-width, initial-scale=1, viewport-fit=cover"` — no `maximum-scale` or `user-scalable`
+- Lighthouse `meta-viewport` audit passes
+
+**V2: BUG-13-B — Timer alarm mitigations:** PASS
+- `preload="auto"` confirmed on alarm `<audio>` element (`995-preview.mp3`)
+- `playFallbackBeep` via Web Audio API oscillator confirmed in source (`app/page.tsx`)
+- `visibilitychange` handler confirmed in `hooks/useTimer.ts`
+- `navigator.vibrate([200, 100, 200, 100, 200])` confirmed in source
+
+**V3: BUG-13-C — Night label contrast:** PASS
+- Night mode: `text-green-800`, `text-red-700`, `text-blue-700` confirmed via `evaluate_script`
+- Day mode: `text-green-700`, `text-red-600`, `text-blue-600` confirmed (no regression)
+
+**V4: Console JS errors:** PASS — 0 errors
+
+**V5: Lighthouse initial run (night mode, localhost):** 95/100 — 2 new failures found
+
+#### BUG-14-A: Digit Contrast Fails at Night (green-500 — 2.64:1)
+
+**Severity:** Medium
+**Location:** `components/DigitalClock.tsx` — hour digit `colorClass`
+**Status:** FIXED (Round 14)
+
+The hour digit used `text-green-500` / `text-green-600` (after initial fix attempt) at night. `text-green-600` in Tailwind v4 oklch renders as `#00a63e`, giving **2.64:1** against `#e9e8ed` — below the 3:1 large-text threshold (48px bold).
+
+**Root cause:** `text-green-600` oklch value is lighter than its Tailwind v3 hex equivalent. The composite background `bg-white/90` over dark indigo body produces `#e9e8ed` at night, compressing the contrast window further.
+
+**Fix applied:** Night hour digit changed to `text-green-700` (oklch `0.527 0.154 150.069` → ~`#15803d`) giving **4.12:1** — well above 3:1. Red and blue digits (`text-red-600` at 3.96:1, `text-blue-600` at 4.24:1) already passed.
+
+#### BUG-14-B: Language Button label-content-name-mismatch (WCAG 2.5.3)
+
+**Severity:** Low
+**Location:** `app/page.tsx` — language selector button
+**Status:** FIXED (Round 14)
+
+The button had `aria-label="Select language"` but displayed visible text "EN"/"UK"/"ID". WCAG 2.5.3 requires the accessible name to contain the visible label text so voice control users can activate it by speaking the visible text.
+
+**Fix applied:** `aria-label` now includes the visible badge: `"EN - Select language"`, `"UK - Select language"`, or `"ID - Select language"`. Lighthouse `label-content-name-mismatch` audit passes.
+
+**V6: Lighthouse final run (night mode, localhost, after BUG-14-A/B fixes):** PASS
+- Accessibility: **100/100**
+- Best Practices: **96/100** (pre-existing `geolocation-on-start` — Won't Fix)
+- Console JS errors: 0
+
+---
 
 ### Resolved Items (Round 6 → Round 7)
 

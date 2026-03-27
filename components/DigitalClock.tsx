@@ -96,14 +96,14 @@ export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, altern
   return (
     <div className={cn("flex flex-col items-center justify-center bg-white/90 backdrop-blur-xl px-4 sm:px-8 py-4 sm:py-6 rounded-3xl shadow-xl border-2 border-white/50", className)}>
       <div className="flex items-center gap-2 sm:gap-4">
-        <TimeColumn value={displayH} unit="hour" colorClass="text-green-500" addTime={addTime} />
+        <TimeColumn value={displayH} unit="hour" colorClass={isDay ? "text-green-500" : "text-green-700"} addTime={addTime} />
         <div className="text-2xl sm:text-4xl font-black text-slate-300 pb-1 sm:pb-2">:</div>
-        <TimeColumn value={displayM} unit="minute" colorClass="text-red-500" addTime={addTime} />
+        <TimeColumn value={displayM} unit="minute" colorClass={isDay ? "text-red-500" : "text-red-600"} addTime={addTime} />
         
         {showSeconds && (
           <>
             <div className="text-2xl sm:text-4xl font-black text-slate-300 pb-1 sm:pb-2">:</div>
-            <TimeColumn value={displayS} unit="second" colorClass="text-blue-500" addTime={addTime} />
+            <TimeColumn value={displayS} unit="second" colorClass={isDay ? "text-blue-500" : "text-blue-600"} addTime={addTime} />
           </>
         )}
         
