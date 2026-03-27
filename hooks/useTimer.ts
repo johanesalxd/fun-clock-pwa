@@ -70,7 +70,7 @@ export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
 
   useEffect(() => {
     if (isTimerRunning && timerEndTime) {
-      const interval = setInterval(() => {
+      const checkTimer = () => {
         const remaining = Math.max(0, timerEndTime - Date.now());
         setTimerValue(remaining);
         if (remaining === 0) {
@@ -78,8 +78,22 @@ export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
           setTimerEndTime(null);
           playAlarmSound();
         }
-      }, 50);
-      return () => clearInterval(interval);
+      };
+
+      const interval = setInterval(checkTimer, 50);
+
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          checkTimer();
+        }
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     }
   }, [isTimerRunning, timerEndTime, playAlarmSound]);
 

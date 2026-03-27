@@ -57,6 +57,29 @@ export default function TimeExplorerApp() {
   const alarmRef = useRef<HTMLAudioElement>(null);
   const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
+  
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const fallbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const initAudio = () => {
+      if (!audioCtxRef.current) {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtxRef.current = new AudioContextClass();
+        }
+      }
+      if (audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+    };
+    document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('touchstart', initAudio, { once: true });
+    return () => {
+      document.removeEventListener('click', initAudio);
+      document.removeEventListener('touchstart', initAudio);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,6 +106,9 @@ export default function TimeExplorerApp() {
   }, [showLangMenu]);
 
   const stopAlarm = useCallback(() => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(0);
+    }
     if (alarmRef.current) {
       alarmRef.current.pause();
       alarmRef.current.currentTime = 0;
@@ -91,19 +117,60 @@ export default function TimeExplorerApp() {
       clearTimeout(alarmTimeoutRef.current);
       alarmTimeoutRef.current = null;
     }
+    if (fallbackIntervalRef.current) {
+      clearInterval(fallbackIntervalRef.current);
+      fallbackIntervalRef.current = null;
+    }
+  }, []);
+
+  const playFallbackBeep = useCallback(() => {
+    if (!audioCtxRef.current) return;
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    
+    const playBeep = () => {
+      if (!audioCtxRef.current) return;
+      const osc = audioCtxRef.current.createOscillator();
+      const gain = audioCtxRef.current.createGain();
+      
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, audioCtxRef.current.currentTime);
+      osc.frequency.setValueAtTime(1108.73, audioCtxRef.current.currentTime + 0.1);
+      
+      gain.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
+      gain.gain.linearRampToValueAtTime(0.3, audioCtxRef.current.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, audioCtxRef.current.currentTime + 0.5);
+      
+      osc.connect(gain);
+      gain.connect(audioCtxRef.current.destination);
+      
+      osc.start();
+      osc.stop(audioCtxRef.current.currentTime + 0.5);
+    };
+
+    playBeep();
+    fallbackIntervalRef.current = setInterval(playBeep, 1000);
   }, []);
 
   const playAlarmSound = useCallback(() => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+
     if (alarmRef.current) {
       alarmRef.current.currentTime = 0;
-      alarmRef.current.play().catch(e => console.log("Alarm play blocked", e));
+      alarmRef.current.play().catch(e => {
+        console.log("Alarm play blocked, using fallback", e);
+        playFallbackBeep();
+      });
       
       if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
       alarmTimeoutRef.current = setTimeout(() => {
         stopAlarm();
       }, 15000);
     }
-  }, [stopAlarm]);
+  }, [stopAlarm, playFallbackBeep]);
 
   const [appMode, setAppMode] = useState<'clock' | 'timer'>('clock');
   const {
@@ -218,7 +285,7 @@ export default function TimeExplorerApp() {
         <audio ref={audioRef} src={currentAudioUrl} loop />
         <audio ref={roosterRef} src={AUDIO_URLS.rooster} />
         <audio ref={cricketRef} src={AUDIO_URLS.night} />
-        <audio ref={alarmRef} src={AUDIO_URLS.alarm} loop />
+        <audio ref={alarmRef} src={AUDIO_URLS.alarm} loop preload="auto" />
 
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -379,6 +446,7 @@ export default function TimeExplorerApp() {
               is24Hour={appMode === 'timer' ? true : is24Hour}
               alternateMode={alternateMode}
               isTimerMode={appMode === 'timer'}
+              isDay={isDay}
               className={cn("w-full", appMode === 'clock' ? "md:w-1/2 md:flex-1" : "max-w-md mx-auto")}
             />
 

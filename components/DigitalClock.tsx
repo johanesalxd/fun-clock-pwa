@@ -25,11 +25,12 @@ interface DigitalClockProps {
   is24Hour: boolean;
   alternateMode: boolean;
   isTimerMode: boolean;
+  isDay?: boolean;
   className?: string;
 }
 
 /** Digital time display with increment/decrement controls and AM/PM toggle. */
-export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, isTimerMode, className }: DigitalClockProps) {
+export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, isTimerMode, isDay = true, className }: DigitalClockProps) {
   const date = new Date(time);
   
   const addTime = (amount: number, unit: 'hour' | 'minute' | 'second') => {
@@ -118,9 +119,9 @@ export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, altern
         )}
       </div>
       <div className="flex gap-4 sm:gap-8 text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-1">
-        <span className="text-green-700">Hours</span>
-        <span className="text-red-600">Minutes</span>
-        {showSeconds && <span className="text-blue-600">Seconds</span>}
+        <span className={isDay ? "text-green-700" : "text-green-800"}>Hours</span>
+        <span className={isDay ? "text-red-600" : "text-red-700"}>Minutes</span>
+        {showSeconds && <span className={isDay ? "text-blue-600" : "text-blue-700"}>Seconds</span>}
       </div>
     </div>
   );
