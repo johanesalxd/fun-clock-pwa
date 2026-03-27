@@ -269,10 +269,10 @@ function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode
           </div>
         )}
       </div>
-      <div className="flex gap-4 sm:gap-8 text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
-        <span className="text-green-600/70">Hours</span>
-        <span className="text-red-500/70">Minutes</span>
-        {showSeconds && <span className="text-blue-500/70">Seconds</span>}
+      <div className="flex gap-4 sm:gap-8 text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-1">
+        <span className="text-green-700">Hours</span>
+        <span className="text-red-600">Minutes</span>
+        {showSeconds && <span className="text-blue-600">Seconds</span>}
       </div>
     </div>
   );
