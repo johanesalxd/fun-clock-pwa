@@ -66,7 +66,7 @@ A Chrome DevTools Protocol bridge that connects to a live Chrome instance runnin
 
 ### Testing Workflow
 
-This project used a **6-round iterative QA cycle**:
+This project used a **9-round iterative QA cycle**:
 
 ```
 Round 1: Discovery
@@ -175,9 +175,9 @@ This methodology generalizes to any web or mobile PWA. The key principles:
 
 ---
 
-## Verification Summary (Round 6)
+## Verification Summary (Rounds 1–9)
 
-Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate Mode, Full Seconds Circle, second hand accuracy, and rooster direction guard all verified with real CDP + dev-browser evidence. 3 new contrast regressions found in digital clock label row (A11Y-5). Round 7 (targeted): A11Y-5 fix verified — Lighthouse accessibility restored to **100/100**.
+Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate Mode, Full Seconds Circle, second hand accuracy, and rooster direction guard all verified. 3 new contrast regressions found in digital clock label row (A11Y-5). Round 7: A11Y-5 fix verified — Lighthouse accessibility restored to **100/100**. Round 8: Refactor regression testing (Timer Mode + component split) — 2 regressions found (BUG-1, A11Y-4). Round 9: Both regressions fixed and verified — Lighthouse **100/100**, no open actionable items.
 
 | Item | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 |
 |------|---------|---------|---------|---------|---------|---------|
@@ -748,8 +748,6 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 - `<link rel="apple-touch-icon" href="/apple-touch-icon.png">` confirmed in `<head>`
 - `icon.svg` still returns HTTP 200 (still referenced as `icons.icon` in `layout.tsx`)
 - No third-party icon requests in network log
-
-### Open Items (Round 4)
 
 ### Open Items (Round 3) — all resolved
 
