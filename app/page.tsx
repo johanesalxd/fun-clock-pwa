@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Sun, Moon, RotateCcw, MapPin, Settings, Play, Pause, HelpCircle } from 'lucide-react';
+import { Sun, Moon, RotateCcw, MapPin, Settings, Play, Pause, HelpCircle, Volume2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { AUDIO_URLS } from '@/lib/constants';
@@ -14,11 +14,13 @@ import { SettingsOverlay } from '@/components/SettingsOverlay';
 import { useWeather } from '@/hooks/useWeather';
 import { useClock } from '@/hooks/useClock';
 import { useTimer } from '@/hooks/useTimer';
+import { useSpeakTime } from '@/hooks/useSpeakTime';
 
 export default function TimeExplorerApp() {
   const [mounted, setMounted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   
   const [is24Hour, setIs24Hour] = useState(false);
   const [showSeconds, setShowSeconds] = useState(true);
@@ -43,6 +45,7 @@ export default function TimeExplorerApp() {
 
   const { weatherData, weatherCondition, locationName, timezone } = useWeather();
   const { time, isPlaying, setIsPlaying, timeOffset, handleTimeChange, togglePlay, syncToNow } = useClock(timezone);
+  const { language, setLanguage, speakTime, isSupported } = useSpeakTime();
 
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -212,6 +215,50 @@ export default function TimeExplorerApp() {
           </div>
           <div className="flex flex-col items-end gap-3 pointer-events-auto">
             <div className="flex gap-3">
+              {appMode === 'clock' && isSupported && (
+                <div className="relative">
+                  <div className={cn("flex items-center backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
+                    <button
+                      aria-label="Speak current time"
+                      onClick={() => speakTime(time)}
+                      className={cn("p-3 rounded-l-full transition-colors", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
+                    >
+                      <Volume2 className="w-6 h-6" />
+                    </button>
+                    <div className={cn("w-px h-6", isDay ? "bg-white/30" : "bg-white/10")} />
+                    <button
+                      aria-label="Select language"
+                      onClick={() => setShowLangMenu(!showLangMenu)}
+                      className={cn("px-2 py-3 rounded-r-full transition-colors flex items-center justify-center min-w-[40px]", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
+                    >
+                      <span className="text-xs font-bold">{language === 'en-US' ? 'EN' : language === 'en-GB' ? 'UK' : 'ID'}</span>
+                    </button>
+                  </div>
+                  
+                  {showLangMenu && (
+                    <div className={cn("absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border backdrop-blur-xl overflow-hidden z-50", isDay ? "bg-white/90 border-white/50" : "bg-slate-800/90 border-slate-700")}>
+                      <button 
+                        onClick={() => { setLanguage('en-US'); setShowLangMenu(false); }}
+                        className={cn("w-full text-left px-4 py-3 text-sm font-medium transition-colors", isDay ? "text-slate-800 hover:bg-slate-100" : "text-slate-200 hover:bg-slate-700", language === 'en-US' && (isDay ? "bg-slate-100" : "bg-slate-700"))}
+                      >
+                        English (US)
+                      </button>
+                      <button 
+                        onClick={() => { setLanguage('en-GB'); setShowLangMenu(false); }}
+                        className={cn("w-full text-left px-4 py-3 text-sm font-medium transition-colors", isDay ? "text-slate-800 hover:bg-slate-100" : "text-slate-200 hover:bg-slate-700", language === 'en-GB' && (isDay ? "bg-slate-100" : "bg-slate-700"))}
+                      >
+                        English (UK)
+                      </button>
+                      <button 
+                        onClick={() => { setLanguage('id-ID'); setShowLangMenu(false); }}
+                        className={cn("w-full text-left px-4 py-3 text-sm font-medium transition-colors", isDay ? "text-slate-800 hover:bg-slate-100" : "text-slate-200 hover:bg-slate-700", language === 'id-ID' && (isDay ? "bg-slate-100" : "bg-slate-700"))}
+                      >
+                        Bahasa Indonesia
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <button 
                 aria-label="Help"
                 onClick={() => setShowHelp(true)}
