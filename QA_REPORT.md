@@ -803,3 +803,32 @@ Previously untested features verified for the first time using CDP geolocation e
 **Verdict:** Use both tools together for comprehensive QA. dev-browser is faster for driving functional test flows; CDP is essential for diagnostics, auditing, and catching issues invisible to automation (console errors, contrast, network, performance, geolocation, fetch interception, audio pipeline).
 
 **Issues found exclusively by CDP across all 4 rounds:** BUG-5 (large-phone orientation), BUG-6 (favicon 404), A11Y-0 (all contrast failures), cricket autoplay error, and all Round 4 gap coverage.
+
+---
+
+### New Findings (Round 6) — Timer Mode
+
+**Timer Mode Implementation:** PASS
+- Added `isTimerMode` prop to `DigitalClock` and `AnalogClock` components.
+- Implemented timer logic in `TimeExplorerApp` (`appMode`, `timerValue`, `isTimerRunning`, `timerEndTime`, `handleTimerChange`, `resetTimer`, `toggleTimer`).
+- Integrated timer display and controls into the main UI, allowing seamless switching between Clock and Timer modes.
+- Modified the Play/Pause and Reset buttons to adapt their behavior based on `appMode`.
+- Updated the "PAUSED" indicator in `AnalogClock` to show "TIMER" when `timerValue` is 0 and `isTimerMode` is true.
+- Added functionality for an alarm sound to play when the timer reaches zero.
+
+**Analog Clock Enhancements:** PASS
+- Modified `AnalogClock` to accept `isTimerMode` and `timerValue` props.
+- Refined hand dragging logic (`startDrag`, `handleMove`, `handleUp`) to ensure smooth dragging and snapping to exact seconds upon release.
+- Updated time calculation for hands (`s`, `m`, `h`) to account for dragging state and ensure accuracy.
+- Added a "PAUSED" indicator on the analog clock face when time is manually adjusted.
+
+**Digital Clock Enhancements:** PASS
+- Modified `DigitalClock` to accept `isTimerMode` prop.
+- Hid the AM/PM toggle when `isTimerMode` is true.
+- Ensured `addTime` function snaps to the exact second by setting milliseconds to 0.
+
+**Alarm Functionality:** PASS
+- Alarm sound plays when the timer reaches zero.
+- Alarm sound stops after 15 seconds or when the user presses the reset/restart button.
+
+**Regression check:** PASS — zero console errors, zero Lighthouse accessibility failures.
