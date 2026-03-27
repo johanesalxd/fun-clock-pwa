@@ -1,18 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, RotateCcw, ChevronUp, ChevronDown, MapPin, Volume2, VolumeX, CloudLightning, Settings, X, Play, Pause, Music, HelpCircle } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Sun, Moon, RotateCcw, MapPin, Settings, Play, Pause, HelpCircle } from 'lucide-react';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '../lib/utils';
+import { AUDIO_URLS } from '../lib/constants';
 
 import { AnalogClock } from '../components/AnalogClock';
 import { DigitalClock } from '../components/DigitalClock';
 import { DateDisplay } from '../components/DateDisplay';
-import { Toggle } from '../components/Toggle';
 import { WeatherOverlay } from '../components/WeatherOverlay';
 import { HelpOverlay } from '../components/HelpOverlay';
 import { SettingsOverlay } from '../components/SettingsOverlay';
@@ -21,18 +17,8 @@ import { useWeather } from '../hooks/useWeather';
 import { useClock } from '../hooks/useClock';
 import { useTimer } from '../hooks/useTimer';
 
-const AUDIO_URLS = {
-  rain: 'https://assets.mixkit.co/active_storage/sfx/2393/2393-preview.mp3',
-  thunder: 'https://assets.mixkit.co/active_storage/sfx/2390/2390-preview.mp3',
-  sunny: 'https://assets.mixkit.co/active_storage/sfx/17/17-preview.mp3',
-  snow: 'https://assets.mixkit.co/active_storage/sfx/2608/2608-preview.mp3',
-  rooster: 'https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3',
-  night: 'https://assets.mixkit.co/active_storage/sfx/39/39-preview.mp3',
-  alarm: 'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3'
-};
-
 export default function TimeExplorerApp() {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   
@@ -42,7 +28,18 @@ export default function TimeExplorerApp() {
   const [alternateMode, setAlternateMode] = useState(false);
   const [fullSecondsCircle, setFullSecondsCircle] = useState(true);
 
-  const [stars, setStars] = useState<any[]>([]);
+  const [stars, setStars] = useState<any[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return Array.from({ length: 30 }).map(() => ({
+      width: Math.random() * 5 + 2 + 'px',
+      height: Math.random() * 5 + 2 + 'px',
+      top: Math.random() * 100 + '%',
+      left: Math.random() * 100 + '%',
+      animationDuration: Math.random() * 4 + 2 + 's',
+      animationDelay: Math.random() * 2 + 's',
+      opacity: Math.random() * 0.6 + 0.2
+    }));
+  });
 
   const { weatherData, weatherCondition, locationName, timezone } = useWeather();
   const { time, isPlaying, setIsPlaying, timeOffset, handleTimeChange, togglePlay, syncToNow } = useClock(timezone);
@@ -57,7 +54,7 @@ export default function TimeExplorerApp() {
   const alarmRef = useRef<HTMLAudioElement>(null);
   const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const stopAlarm = React.useCallback(() => {
+  const stopAlarm = useCallback(() => {
     if (alarmRef.current) {
       alarmRef.current.pause();
       alarmRef.current.currentTime = 0;
@@ -68,7 +65,7 @@ export default function TimeExplorerApp() {
     }
   }, []);
 
-  const playAlarmSound = React.useCallback(() => {
+  const playAlarmSound = useCallback(() => {
     if (alarmRef.current) {
       alarmRef.current.currentTime = 0;
       alarmRef.current.play().catch(e => console.log("Alarm play blocked", e));
@@ -80,9 +77,8 @@ export default function TimeExplorerApp() {
     }
   }, [stopAlarm]);
 
+  const [appMode, setAppMode] = useState<'clock' | 'timer'>('clock');
   const {
-    appMode,
-    setAppMode,
     timerValue,
     isTimerRunning,
     resetTimer,
@@ -90,19 +86,6 @@ export default function TimeExplorerApp() {
     getTimerDisplayDate,
     handleTimerChange
   } = useTimer(playAlarmSound, stopAlarm);
-
-  useEffect(() => {
-    setMounted(true);
-    setStars(Array.from({ length: 30 }).map(() => ({
-      width: Math.random() * 5 + 2 + 'px',
-      height: Math.random() * 5 + 2 + 'px',
-      top: Math.random() * 100 + '%',
-      left: Math.random() * 100 + '%',
-      animationDuration: Math.random() * 4 + 2 + 's',
-      animationDelay: Math.random() * 2 + 's',
-      opacity: Math.random() * 0.6 + 0.2
-    })));
-  }, []);
 
   const playThunder = () => {
     const audio = new Audio(AUDIO_URLS.thunder);
@@ -342,21 +325,24 @@ export default function TimeExplorerApp() {
           appMode={appMode}
           setAppMode={setAppMode}
           setIsPlaying={setIsPlaying}
-          isMuted={isMuted}
-          setIsMuted={setIsMuted}
-          weatherCondition={weatherCondition}
-          playThunder={playThunder}
-          AUDIO_URLS={AUDIO_URLS}
-          is24Hour={is24Hour}
-          setIs24Hour={setIs24Hour}
-          showSeconds={showSeconds}
-          setShowSeconds={setShowSeconds}
-          showDate={showDate}
-          setShowDate={setShowDate}
-          alternateMode={alternateMode}
-          setAlternateMode={setAlternateMode}
-          fullSecondsCircle={fullSecondsCircle}
-          setFullSecondsCircle={setFullSecondsCircle}
+          display={{
+            is24Hour,
+            setIs24Hour,
+            showSeconds,
+            setShowSeconds,
+            showDate,
+            setShowDate,
+            alternateMode,
+            setAlternateMode,
+            fullSecondsCircle,
+            setFullSecondsCircle
+          }}
+          audio={{
+            isMuted,
+            setIsMuted,
+            weatherCondition,
+            playThunder
+          }}
         />
       </div>
     </main>

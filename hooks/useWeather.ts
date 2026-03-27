@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 
+/** Fetches weather data and timezone based on user's geolocation. */
 export function useWeather() {
   const [weatherData, setWeatherData] = useState<any>(null);
   const [weatherCondition, setWeatherCondition] = useState<string>('clear');
   const [locationName, setLocationName] = useState<string>('Local');
-  const [timezone, setTimezone] = useState<string>('UTC');
+  const [timezone, setTimezone] = useState<string>(() => {
+    if (typeof Intl !== 'undefined') {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+    return 'UTC';
+  });
 
   useEffect(() => {
-    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setTimezone(localTz);
-
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;

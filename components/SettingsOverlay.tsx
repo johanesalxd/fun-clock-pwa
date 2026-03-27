@@ -1,35 +1,49 @@
 import React from 'react';
 import { X, Volume2, VolumeX, CloudLightning, Music } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { Toggle } from './Toggle';
+import { cn } from '../lib/utils';
+import { AUDIO_URLS } from '../lib/constants';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+interface DisplaySettings {
+  is24Hour: boolean;
+  setIs24Hour: (v: boolean) => void;
+  showSeconds: boolean;
+  setShowSeconds: (v: boolean) => void;
+  showDate: boolean;
+  setShowDate: (v: boolean) => void;
+  alternateMode: boolean;
+  setAlternateMode: (v: boolean) => void;
+  fullSecondsCircle: boolean;
+  setFullSecondsCircle: (v: boolean) => void;
 }
 
+interface AudioSettings {
+  isMuted: boolean;
+  setIsMuted: (v: boolean) => void;
+  weatherCondition: string;
+  playThunder: () => void;
+}
+
+interface SettingsOverlayProps {
+  showSettings: boolean;
+  setShowSettings: (v: boolean) => void;
+  appMode: 'clock' | 'timer';
+  setAppMode: (v: 'clock' | 'timer') => void;
+  setIsPlaying: (v: boolean) => void;
+  display: DisplaySettings;
+  audio: AudioSettings;
+}
+
+/** Slide-up settings panel for mode, audio, soundboard, and display options. */
 export function SettingsOverlay({
   showSettings,
   setShowSettings,
   appMode,
   setAppMode,
   setIsPlaying,
-  isMuted,
-  setIsMuted,
-  weatherCondition,
-  playThunder,
-  AUDIO_URLS,
-  is24Hour,
-  setIs24Hour,
-  showSeconds,
-  setShowSeconds,
-  showDate,
-  setShowDate,
-  alternateMode,
-  setAlternateMode,
-  fullSecondsCircle,
-  setFullSecondsCircle
-}: any) {
+  display,
+  audio
+}: SettingsOverlayProps) {
   if (!showSettings) return null;
 
   return (
@@ -75,16 +89,16 @@ export function SettingsOverlay({
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Audio</h3>
               <div className="flex flex-wrap gap-2">
                 <button 
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={cn("flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border-2 transition-all active:scale-95", isMuted ? "bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200" : "bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200")}
+                  onClick={() => audio.setIsMuted(!audio.isMuted)}
+                  className={cn("flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border-2 transition-all active:scale-95", audio.isMuted ? "bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200" : "bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200")}
                 >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  <span className="text-sm font-bold">{isMuted ? 'Unmute Sounds' : 'Mute Sounds'}</span>
+                  {audio.isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  <span className="text-sm font-bold">{audio.isMuted ? 'Unmute Sounds' : 'Mute Sounds'}</span>
                 </button>
 
-                {weatherCondition === 'thunderstorm' && !isMuted && (
+                {audio.weatherCondition === 'thunderstorm' && !audio.isMuted && (
                   <button 
-                    onClick={playThunder}
+                    onClick={audio.playThunder}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-100 border-2 border-purple-300 text-purple-700 rounded-xl shadow-sm hover:bg-purple-200 transition-all active:scale-95"
                   >
                     <CloudLightning className="w-4 h-4" />
@@ -104,11 +118,11 @@ export function SettingsOverlay({
                   <button
                     key={key}
                     onClick={() => {
-                      const audio = new Audio(url as string);
-                      audio.play().catch(e => console.log("Soundboard play blocked", e));
+                      const audioEl = new Audio(url as string);
+                      audioEl.play().catch(e => console.log("Soundboard play blocked", e));
                       setTimeout(() => {
-                        audio.pause();
-                        audio.currentTime = 0;
+                        audioEl.pause();
+                        audioEl.currentTime = 0;
                       }, 5000);
                     }}
                     className="flex items-center gap-2 px-3 py-2 bg-amber-100 border-2 border-amber-300 text-amber-700 rounded-xl shadow-sm hover:bg-amber-200 transition-all active:scale-95 capitalize"
@@ -127,13 +141,13 @@ export function SettingsOverlay({
             <div className="flex flex-col gap-2">
               {appMode !== 'timer' && (
                 <>
-                  <Toggle label="24-Hour Time" checked={is24Hour} onChange={setIs24Hour} color="green" />
-                  <Toggle label="Show Seconds" checked={showSeconds} onChange={setShowSeconds} color="blue" />
-                  <Toggle label="Show Date" checked={showDate} onChange={setShowDate} color="yellow" />
-                  <Toggle label="Alternate Mode (00-60)" checked={alternateMode} onChange={setAlternateMode} color="yellow" />
+                  <Toggle label="24-Hour Time" checked={display.is24Hour} onChange={display.setIs24Hour} color="green" />
+                  <Toggle label="Show Seconds" checked={display.showSeconds} onChange={display.setShowSeconds} color="blue" />
+                  <Toggle label="Show Date" checked={display.showDate} onChange={display.setShowDate} color="yellow" />
+                  <Toggle label="Alternate Mode (00-60)" checked={display.alternateMode} onChange={display.setAlternateMode} color="yellow" />
                 </>
               )}
-              <Toggle label="Full Seconds Circle" checked={fullSecondsCircle} onChange={setFullSecondsCircle} color="yellow" />
+              <Toggle label="Full Seconds Circle" checked={display.fullSecondsCircle} onChange={display.setFullSecondsCircle} color="yellow" />
             </div>
           </div>
         </div>

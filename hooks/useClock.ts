@@ -1,38 +1,32 @@
 import { useState, useEffect, useCallback } from 'react';
 
+function getTimezoneTimeMs(timezone: string): number {
+  const now = new Date();
+  const tzDateStr = now.toLocaleString('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+    hour12: false,
+  });
+  return new Date(tzDateStr).getTime() + now.getMilliseconds();
+}
+
+/** Manages real-time clock state with timezone support and manual time offset. */
 export function useClock(timezone: string) {
-  const [time, setTime] = useState(0);
+  const [time, setTime] = useState(() => {
+    if (timezone) {
+      return getTimezoneTimeMs(timezone);
+    }
+    return 0;
+  });
   const [isPlaying, setIsPlaying] = useState(true);
   const [timeOffset, setTimeOffset] = useState(0);
-
-  // Initial time sync
-  useEffect(() => {
-    if (!timezone) return;
-    const now = new Date();
-    const tzDateStr = now.toLocaleString('en-US', { 
-      timeZone: timezone,
-      year: 'numeric', month: 'numeric', day: 'numeric',
-      hour: 'numeric', minute: 'numeric', second: 'numeric',
-      hour12: false
-    });
-    const tzDate = new Date(tzDateStr);
-    setTime(tzDate.getTime() + now.getMilliseconds() + timeOffset);
-  }, [timezone, timeOffset]);
 
   useEffect(() => {
     if (!isPlaying || !timezone) return;
     let frameId: number;
     const update = () => {
-      const now = new Date();
-      const tzDateStr = now.toLocaleString('en-US', { 
-        timeZone: timezone,
-        year: 'numeric', month: 'numeric', day: 'numeric',
-        hour: 'numeric', minute: 'numeric', second: 'numeric',
-        hour12: false
-      });
-      const tzDate = new Date(tzDateStr);
-      const realTimeInTz = tzDate.getTime() + now.getMilliseconds();
-      setTime(realTimeInTz + timeOffset);
+      setTime(getTimezoneTimeMs(timezone) + timeOffset);
       frameId = requestAnimationFrame(update);
     };
     frameId = requestAnimationFrame(update);
@@ -43,32 +37,14 @@ export function useClock(timezone: string) {
     setIsPlaying(false);
     setTime(prev => {
       const nextTime = typeof newTime === 'function' ? newTime(prev) : newTime;
-      const now = new Date();
-      const tzDateStr = now.toLocaleString('en-US', {
-        timeZone: timezone,
-        year: 'numeric', month: 'numeric', day: 'numeric',
-        hour: 'numeric', minute: 'numeric', second: 'numeric',
-        hour12: false
-      });
-      const tzDate = new Date(tzDateStr);
-      const realTimeInTz = tzDate.getTime() + now.getMilliseconds();
-      setTimeOffset(nextTime - realTimeInTz);
+      setTimeOffset(nextTime - getTimezoneTimeMs(timezone));
       return nextTime;
     });
   }, [timezone]);
 
   const togglePlay = useCallback(() => {
     if (!isPlaying) {
-      const now = new Date();
-      const tzDateStr = now.toLocaleString('en-US', { 
-        timeZone: timezone,
-        year: 'numeric', month: 'numeric', day: 'numeric',
-        hour: 'numeric', minute: 'numeric', second: 'numeric',
-        hour12: false
-      });
-      const tzDate = new Date(tzDateStr);
-      const realTimeInTz = tzDate.getTime() + now.getMilliseconds();
-      setTimeOffset(time - realTimeInTz);
+      setTimeOffset(time - getTimezoneTimeMs(timezone));
       setIsPlaying(true);
     } else {
       setIsPlaying(false);

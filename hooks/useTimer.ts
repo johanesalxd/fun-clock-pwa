@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+/** Manages countdown timer state: start, pause, reset, and alarm triggering. */
 export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
-  const [appMode, setAppMode] = useState<'clock' | 'timer'>('clock');
   const [timerValue, setTimerValue] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const [timerEndTime, setTimerEndTime] = useState<number | null>(null);
@@ -69,7 +69,7 @@ export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
   }, [stopAlarm]);
 
   useEffect(() => {
-    if (appMode === 'timer' && isTimerRunning && timerEndTime) {
+    if (isTimerRunning && timerEndTime) {
       const interval = setInterval(() => {
         const remaining = Math.max(0, timerEndTime - Date.now());
         setTimerValue(remaining);
@@ -81,11 +81,9 @@ export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
       }, 50);
       return () => clearInterval(interval);
     }
-  }, [appMode, isTimerRunning, timerEndTime, playAlarmSound]);
+  }, [isTimerRunning, timerEndTime, playAlarmSound]);
 
   return {
-    appMode,
-    setAppMode,
     timerValue,
     isTimerRunning,
     resetTimer,
