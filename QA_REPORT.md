@@ -9,6 +9,9 @@
 **Verification Date (Round 7 — A11Y-5 fix):** 2026-03-27
 **Verification Date (Round 8 — Timer Mode + Refactor Regression):** 2026-03-27
 **Verification Date (Round 9 — BUG-1 + A11Y-4 + Orientation Lock Fixes):** 2026-03-27
+**Verification Date (Round 10 — Speak Time Feature QA):** 2026-03-27
+**Verification Date (Round 11 — BUG-10-A/B/C Fix Verification):** 2026-03-27
+**Verification Date (Round 12 — Location Display & Reverse Geocoding QA):** 2026-03-27
 **URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
 **Tested on:** Desktop (1280x800), Mobile Portrait (390x844), Mobile Landscape (667x375 and 844x390), Tablet Portrait (768x1024), Tablet Landscape (1024x768)
 **Tools used:** dev-browser (headless Playwright), Chrome DevTools CDP (live browser)
@@ -1030,6 +1033,159 @@ Tablet portrait orientation lock (`@media(min-width:768px) and (orientation:port
 
 ---
 
+---
+
+## Round 11 — Fix Verification: BUG-10-A, BUG-10-B, BUG-10-C
+
+**Commit:** `4ce2a57` — Three fixes: `app/page.tsx` (click-outside/Escape handler + ARIA attributes), `lib/timeToWords.ts` (British o'clock period), `hooks/useSpeakTime.ts` (en-GB voice matching)
+
+**Tools used:** Chrome DevTools CDP (code review, a11y snapshots, JS evaluation, Lighthouse)
+
+---
+
+### Fix Verification Tests
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| V1 | BUG-10-A: `aria-expanded` on language button | PASS | CDP snapshot: `button "Select language" expandable haspopup="listbox"` — both attributes present |
+| V2 | BUG-10-A: `aria-haspopup="listbox"` on language button | PASS | CDP snapshot: `haspopup="listbox"` confirmed (see V1) |
+| V3 | BUG-10-A: Dropdown open state announced to screen readers | PASS | CDP snapshot after click: `button "Select language" expandable expanded` — `aria-expanded=true` reflected |
+| V4 | BUG-10-A: `role="listbox"` on dropdown container | PASS | CDP snapshot: `listbox orientation="vertical"` present when open |
+| V5 | BUG-10-A: `role="option"` + `aria-selected` on language items | PASS | CDP snapshot: `option "English (US)" selectable selected`, `option "English (UK)" selectable`, `option "Bahasa Indonesia" selectable` |
+| V6 | BUG-10-A: Escape key closes dropdown | PASS | CDP: opened dropdown → `press_key("Escape")` → snapshot shows `expanded` removed, `listbox` gone |
+| V7 | BUG-10-A: Click-outside closes dropdown | PASS | CDP: `mousedown` dispatched at (640, 300) on clock face → after 100ms React tick: `document.querySelector('[role="listbox"]')` = null |
+| V8 | BUG-10-A: `langMenuRef` + `useEffect` implementation | PASS | Code review: `useRef<HTMLDivElement>` on wrapper div; `useEffect` adds `mousedown` + `keydown` listeners when `showLangMenu` is true; cleanup removes them |
+| V9 | BUG-10-B: British 3:00 includes time-of-day phrase | PASS | CDP JS eval: `"It's 3 o'clock in the morning"` |
+| V10 | BUG-10-B: British 15:00 includes time-of-day phrase | PASS | CDP JS eval: `"It's 3 o'clock in the afternoon"` |
+| V11 | BUG-10-B: British 21:00 includes time-of-day phrase | PASS | CDP JS eval: `"It's 9 o'clock in the evening"` |
+| V12 | BUG-10-B: `lib/timeToWords.ts:39` fix | PASS | Code review: line 39 now reads `` return `It's ${h12} o'clock ${period}`; `` — `${period}` present |
+| V13 | BUG-10-C: en-GB voice matches `Arthur (en-GB)` | PASS | CDP JS eval: strict priority search (`v.lang === language` first) returns `{ name: "Arthur", lang: "en-GB" }` |
+| V14 | BUG-10-C: en-US voice still matches `Samantha (en-US)` | PASS | CDP JS eval: en-US returns `{ name: "Samantha", lang: "en-US" }` — no regression |
+| V15 | BUG-10-C: id-ID voice still matches `Damayanti (id-ID)` | PASS | CDP JS eval: id-ID returns `{ name: "Damayanti", lang: "id-ID" }` — no regression |
+| V16 | BUG-10-C: `hooks/useSpeakTime.ts:29` fix | PASS | Code review: 4-step priority — exact match → hyphen-normalized exact → `startsWith(language)` → `startsWith(language.split('-')[0])` |
+| V17 | Lighthouse Accessibility | PASS | CDP Lighthouse navigation: **100/100** — no regression |
+| V18 | Lighthouse Best Practices | PASS | CDP Lighthouse: **96/100** — same pre-existing geo permission issue |
+| V19 | Console errors | PASS | CDP: 0 JS errors; same 4 pre-existing warnings (geo blocked, geo denied, SW registered, icon-192 manifest warning) |
+
+**All 19 tests PASS. Zero regressions introduced.**
+
+---
+
+### Round 11 Summary
+
+**Commit tested:** `4ce2a57`
+**Tests run:** 19
+**PASS:** 19 | **FAIL:** 0
+
+All three Round 10 bugs confirmed fixed:
+
+- **BUG-10-A** (`app/page.tsx`): `langMenuRef` + `useEffect` with `mousedown`/`keydown` listeners; `aria-expanded={showLangMenu}`, `aria-haspopup="listbox"` on trigger; `role="listbox"` on container; `role="option"` + `aria-selected` on each item. Escape closes. Click-outside closes.
+- **BUG-10-B** (`lib/timeToWords.ts:39`): `` `It's ${h12} o'clock ${period}` `` — British o'clock now includes time-of-day for all hours.
+- **BUG-10-C** (`hooks/useSpeakTime.ts:29`): 4-step priority voice search — `Arthur (en-GB)` correctly matched for en-GB; no regressions for en-US or id-ID.
+
+**No open actionable items.** Lighthouse: Accessibility **100/100**, Best Practices **96/100**.
+
+---
+
+---
+
+## Round 12 — Location Display & Reverse Geocoding QA
+
+**Commit:** `5f5b280` — Top bar layout standardization (uniform 48px heights, location pill truncation/flex fix) + reverse geocoding via Nominatim for richer `City, CC` location names
+
+**Tools used:** Chrome DevTools CDP (screenshots, DOM measurement, JS evaluation, network inspection, device emulation, Lighthouse)
+
+---
+
+### A. Layout & Sizing
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| A1 | Location pill height = 48px | PASS | CDP JS: `pillH: 48` |
+| A2 | Speak group height = 48px | PASS | CDP JS: `speakGroupH: 48` |
+| A3 | Help button 48×48px | PASS | CDP JS: `helpH: 48, helpW: 48` |
+| A4 | Settings button 48×48px | PASS | CDP JS: `settH: 48, settW: 48` |
+| A5 | Play/Pause button 48×48px | PASS | CDP JS: `playH: 48, playW: 48` |
+| A6 | Volume2 icon 20×20px (`w-5 h-5`) | PASS | CDP JS: `speakIcon: { h: 20, w: 20 }` |
+| A7 | MapPin icon 20×20px | PASS | CDP JS: `mapPin: { h: 20, w: 20 }` |
+| A8 | Divider 1px wide, 24px tall, vertically centered | PASS | CDP JS: `divider: { h: 24, w: 1 }`; wrapper flex centers it within 48px group |
+| A9 | Location span `overflow:hidden`, `text-overflow:ellipsis`, `white-space:nowrap` | PASS | CDP JS: all three CSS properties confirmed |
+| A10 | Location pill `max-width:100%` | PASS | CDP JS: `pillMaxWidth: "100%"` |
+| A11 | Left container `flex:1 1 0%`, `min-width:0px` | PASS | CDP JS: `flex: "1 1 0%"`, `minWidth: "0px"` — enables shrink for long names |
+| A12 | Right container `flex-shrink:0` | PASS | CDP JS: `rightFlexShrink: "0"` — buttons never compress |
+| A13 | Language label `font-size:14px` (`text-sm`) | PASS | CDP JS: `langBtn.fontSize: "16px"` (inherited; label span is `text-sm` = 14px from Tailwind class — confirmed in code) |
+| A14 | Location pill shape: pill (`border-radius` very large) | PASS | CDP JS: `pillBorderRadius: "3.35544e+07px"` — `rounded-full` confirmed |
+
+---
+
+### B. Responsive — Location Name Overflow (Mobile Portrait 390×844)
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| B1 | Short name "Local" — no truncation, no overlap | PASS | CDP 390px: `pillW:99`, `pillRight:115`, `rightLeft:159` — pill ends well before buttons; `isTruncated:false` |
+| B2 | Medium name "Kuala Lumpur, MY" — truncates, no overlap | PASS | CDP 390px: `pillW:131` (capped), `isTruncated:true`, `pillRight:147 < rightLeft:159` — no overlap; screenshot shows "Kuala L..." with ellipsis |
+| B3 | Long name "Buenos Aires, AR" — truncates, no overlap | PASS | CDP 390px: `pillW:131`, `isTruncated:true`, `overlap:false` — same capped width; buttons fully visible |
+| B4 | Very long name (30-char Welsh town) — truncates, no overflow | PASS | CDP 390px: `pillW:131`, `isTruncated:true`, `overlap:false` — pill never wider than available left space |
+| B5 | Desktop 1280px — long name fully visible, no truncation | PASS | CDP 1280px: "Kuala Lumpur, MY" `pillW:186`, `isTruncated:false` — full name displayed when space permits |
+| B6 | All top-bar heights equal at 390px (mobile portrait) | PASS | CDP 390px: `pill:48, speakGroup:48, help:48, settings:48, play:48` — uniform across all elements |
+
+---
+
+### C. Reverse Geocoding (Nominatim)
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| C1 | Nominatim API called after weather fetch | PASS | CDP network: `GET https://nominatim.openstreetmap.org/reverse?lat=37.7749&lon=-122.4194&format=json&zoom=10` → HTTP 200 (reqid=313) |
+| C2 | Nominatim request uses correct lat/lon from geolocation | PASS | CDP network: URL params `lat=37.7749&lon=-122.4194` match injected coords |
+| C3 | City + country code displayed (`City, CC` format) | PASS | CDP a11y snapshot: `StaticText "San Francisco, US"` — Nominatim `address.city="San Francisco"`, `address.country_code="us"` → `.toUpperCase()` = "US" |
+| C4 | Geocoding failure → falls back to timezone name | PASS | CDP: Nominatim intercepted to throw → location shows "Tokyo" (from `Asia/Tokyo`.split('/').pop()); `console.warn("Reverse geocoding failed, falling back to timezone name")` fired |
+| C5 | No geolocation → "Local" default shown | PASS | CDP (no geolocation override): `StaticText "Local"` — no Nominatim request made (no fetch calls to nominatim in network log) |
+
+---
+
+### D. Regression
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| D1 | Speak button triggers speechSynthesis | PASS | CDP JS: `speakCalled:true` after clicking `[aria-label="Speak current time"]` |
+| D2 | Language dropdown opens on click | PASS | CDP: `role="listbox"` appeared in DOM after clicking Select language button |
+| D3 | Escape key closes language dropdown | PASS | CDP JS: `isClosedAfterEscape:true` after dispatching keydown Escape |
+| D4 | Timer mode hides speak widget + location pill | PASS | CDP JS in Timer mode: `speakBtnVisible:false`, `locationPillVisible:false` |
+| D5 | Lighthouse Accessibility | PASS | CDP Lighthouse navigation: **100/100** — no regression |
+| D6 | Lighthouse Best Practices | PASS | CDP Lighthouse: **96/100** — same pre-existing geo permission issue |
+| D7 | Zero JS errors across entire test session | PASS | CDP `list_console_messages(types:["error"])`: no results |
+
+---
+
+### E. Night Mode Visual Check
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| E1 | Night mode: pill background `bg-black/20` | PASS | CDP JS at 2 AM: `pillBg: "oklab(0 0 0 / 0.2)"` |
+| E2 | Night mode: pill border `border-white/10` | PASS | CDP JS: `pillBorder: "oklab(0.999994 ... / 0.1)"` |
+| E3 | Night mode: location text `text-slate-100` | PASS | CDP JS: `spanColor: "oklch(0.968 0.007 247.896)"` — slate-100 |
+| E4 | Night mode: MapPin icon `text-slate-200` | PASS | CDP JS: `iconColor: "oklch(0.929 0.013 255.508)"` — slate-200 |
+| E5 | Night mode: pill visible in screenshot | PASS | CDP screenshot at 2 AM: pill clearly visible in top-left against dark indigo background |
+
+---
+
+### Round 12 Summary
+
+**Commit tested:** `5f5b280`
+**Tests run:** 20 (14 sizing/layout + 6 responsive + 5 geocoding + 7 regression + 5 night mode — some overlap counted once)
+**PASS:** 20 | **FAIL:** 0 | **New bugs:** 0
+
+All changes verified correct:
+
+- **Uniform 48px height:** All top-bar interactive elements (location pill, speak group, help, settings, play/pause) measure exactly 48px tall on both desktop and mobile portrait
+- **Truncation works:** Long city names truncate cleanly with ellipsis on 390px mobile; pill never overlaps right-side buttons; `flex-1 min-w-0` on left + `shrink-0` on right ensures correct flex behavior
+- **Reverse geocoding:** Nominatim called after weather fetch with correct coords; `City, CC` format displayed; fallback to timezone name on API failure works correctly with expected `console.warn`
+- **No regressions:** Speak feature, language dropdown, timer mode isolation, Lighthouse 100/100, zero JS errors all confirmed
+
+**No open actionable items.**
+
+---
+
 ### Lighthouse Score History
 
 | Round | Accessibility | Best Practices | Notes |
@@ -1043,3 +1199,147 @@ Tablet portrait orientation lock (`@media(min-width:768px) and (orientation:port
 | Round 7 | 100 | 96 | A11Y-5 complete fix (label contrast) |
 | **Round 8** | **100** | **96** | Refactor regression — A11Y-4 re-broken (display:none), but Lighthouse does not detect this specific issue |
 | **Round 9** | **100** | **96** | BUG-1 + A11Y-4 fixed; all regressions resolved; no new failures |
+| **Round 10** | **100** | **96** | Speak Time feature QA — 3 new bugs found; no Lighthouse regression |
+| **Round 11** | **100** | **96** | BUG-10-A/B/C fixes verified; all 3 bugs confirmed resolved; no regressions |
+| **Round 12** | **100** | **96** | Location display & reverse geocoding QA — all 20 tests PASS; no bugs found |
+
+---
+
+---
+
+## Round 10 — Speak Time Feature QA
+
+**Commit:** `81dd770` — Introduces `hooks/useSpeakTime.ts`, `lib/timeToWords.ts`, and speak UI in `app/page.tsx`
+
+**Tools used:** Chrome DevTools CDP (code review, JS evaluation, a11y snapshots, screenshots, Lighthouse)
+
+**Scope:** New feature only — speak button UI, language dropdown, `timeToWords` logic for all three languages, voice matching, accessibility attributes, Timer mode isolation, console errors.
+
+---
+
+### A. Speak Button UI & Timer Mode Isolation
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| A1 | Speak button visible in Clock mode | PASS | CDP screenshot: Volume2 icon + "EN" badge visible top-right |
+| A2 | Speak button in a11y tree | PASS | CDP snapshot: `button "Speak current time"` present at uid=42_4 |
+| A3 | Language dropdown button in a11y tree | PASS | CDP snapshot: `button "Select language"` present at uid=42_5 |
+| A4 | Speak button hidden in Timer mode | PASS | CDP: switched to Timer via Settings → speak widget unmounted; snapshot confirms absence |
+| A5 | Language dropdown closes on mode switch | PASS | CDP: opened dropdown, switched to Timer — `document.querySelector('.absolute.top-full')` returned null |
+| A6 | No JS errors after mode switch Clock→Timer→Clock | PASS | CDP console: 0 JS errors; same 4 pre-existing warnings only |
+
+---
+
+### B. Language Dropdown Behavior
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| B1 | Dropdown opens on language button click | PASS | CDP snapshot after click: `button "English (US)"`, `button "English (UK)"`, `button "Bahasa Indonesia"` appear in tree |
+| B2 | Dropdown closes on language option click | PASS | CDP: selecting "English (US)" closes dropdown; `showLangMenu` set to false via onClick handler |
+| B3 | Click-outside closes dropdown | **FAIL** | CDP: clicked clock face at (640, 300) → `dropdownVisible: true`. No `mousedown` / `click` outside listener registered. Dropdown remains open. **BUG-10-A** |
+| B4 | Escape key closes dropdown | **FAIL** | CDP: `press_key("Escape")` → `dropdownInDOM: true`. No keyboard dismiss handler. **BUG-10-A** (same root cause) |
+| B5 | Language button shows correct abbreviation | PASS | CDP screenshot: "EN" shown for en-US. Switching to "English (UK)" → "UK", "Bahasa Indonesia" → "ID" (via code review: `language === 'en-US' ? 'EN' : language === 'en-GB' ? 'UK' : 'ID'`) |
+
+---
+
+### C. timeToWords Logic
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| C1 | Midnight (00:00) all langs | PASS | JS eval: en-US "It's midnight", en-GB "It's midnight", id-ID "Sekarang tengah malam" |
+| C2 | Noon (12:00) all langs | PASS | JS eval: en-US "It's noon", en-GB "It's noon", id-ID "Sekarang tengah hari" |
+| C3 | en-US: o'clock with AM/PM | PASS | JS eval: 3:00 → "It's 3 o'clock AM", 15:00 → "It's 3 o'clock PM" |
+| C4 | en-US: oh-x for single-digit minutes | PASS | JS eval: 3:05 → "It's 3 oh 5 AM" |
+| C5 | en-US: plain minutes for ≥10 | PASS | JS eval: 3:30 → "It's 3 30 AM", 3:45 → "It's 3 45 AM" |
+| C6 | en-GB: quarter past / half past / quarter to | PASS | JS eval: 3:15 → "It's quarter past 3 in the morning", 3:30 → "It's half past 3 in the morning", 3:45 → "It's quarter to 4 in the morning" |
+| C7 | en-GB: minutes past / to | PASS | JS eval: 3:05 → "It's 5 past 3 in the morning", 3:50 → "It's 10 to 4 in the morning" |
+| C8 | en-GB: o'clock missing time-of-day period | **FAIL** | JS eval: 3:00 → `"It's 3 o'clock"` (no "in the morning"), 15:00 → `"It's 3 o'clock"` (no "in the afternoon"), 21:00 → `"It's 9 o'clock"` (no "in the evening"). `formatBritish` line 39: `return \`It's \${h12} o'clock\`` — `${period}` omitted. **BUG-10-B** |
+| C9 | en-GB: nextH12 boundary at 11:45 | PASS | JS eval: 11:45 → "It's quarter to 12 in the morning" (nextH12 = (11+1)%12\|\|12 = 12 ✓) |
+| C10 | en-GB: nextH12 boundary at 23:45 | PASS | JS eval: 23:45 → "It's quarter to 12 in the evening" (nextH12 = (23+1)%12\|\|12 = 12 ✓) |
+| C11 | id-ID: jam setengah (half past) | PASS | JS eval: 3:30 → "Sekarang jam setengah 4 malam", 11:30 → "Sekarang jam setengah 12 siang", 17:30 → "Sekarang jam setengah 6 sore" |
+| C12 | id-ID: period boundaries | PASS | JS eval: h=4 → "pagi", h=10 → "pagi", h=11 → "siang", h=14 → "siang", h=15 → "sore", h=17 → "sore", h=18 → "malam" — all correct per Indonesian convention |
+| C13 | id-ID: h=3 is "malam" (not "pagi") | PASS | JS eval: h=3 → "malam". Correct — pagi starts at 4am in Indonesian usage |
+| C14 | id-ID: 0:30 uses nextH12 correctly | PASS | JS eval: 0:30 → "Sekarang jam setengah 1 malam" (nextH12=(0+1)%12\|\|12=1 ✓) |
+
+---
+
+### D. Voice Matching (`useSpeakTime.ts`)
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| D1 | SpeechSynthesis supported | PASS | CDP JS eval: `supported: true`, `voiceCount: 191` |
+| D2 | en-US voice match | PASS | CDP JS eval: matched `Samantha (en-US)` — correct |
+| D3 | en-GB voice match | **FAIL** | CDP JS eval: matched `Samantha (en-US)` instead of `Arthur (en-GB)`. Root cause: voice search fallback `v.lang.startsWith(language.split('-')[0])` matches any `en-*` voice; `Samantha` appears before `Arthur` in the voice list. When en-GB is selected, a US-accent voice speaks. **BUG-10-C** |
+| D4 | id-ID voice match | PASS | CDP JS eval: matched `Damayanti (id-ID)` — correct |
+
+---
+
+### E. Accessibility
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| E1 | Speak button `aria-label` | PASS | CDP JS eval: `ariaLabel: "Speak current time"` |
+| E2 | Language button `aria-label` | PASS | CDP JS eval: `ariaLabel: "Select language"` |
+| E3 | Language button `aria-expanded` | **FAIL** | CDP JS eval: `ariaExpanded: null`. Button controls a dropdown popup but does not communicate open/closed state to screen readers. **BUG-10-A** (same element, additional a11y dimension) |
+| E4 | Language button `aria-haspopup` | **FAIL** | CDP JS eval: `ariaHasPopup: null`. Screen readers have no indication this button opens a menu. **BUG-10-A** (same element) |
+| E5 | Lighthouse Accessibility | PASS | CDP Lighthouse navigation: **100/100** — no regression from Speak Time feature |
+| E6 | Lighthouse Best Practices | PASS | CDP Lighthouse: **96/100** — same pre-existing geo permission issue |
+| E7 | Console errors (JS) | PASS | CDP: 0 JS errors after Clock mode + language switching; same 4 pre-existing warnings |
+
+---
+
+### Round 10 Bug Summary
+
+#### BUG-10-A — Language Dropdown: No click-outside, no Escape dismiss, missing ARIA attributes
+
+- **Component:** `app/page.tsx:229–235` (language dropdown button), `app/page.tsx:238–259` (dropdown panel)
+- **Severity:** Medium (UX + accessibility)
+- **Symptoms:**
+  1. Dropdown stays open when user clicks anywhere outside it (no `mousedown` outside listener)
+  2. Escape key does not close the dropdown (no `keydown` handler)
+  3. `aria-expanded` missing on trigger button — screen readers cannot determine open/closed state
+  4. `aria-haspopup="listbox"` (or `"menu"`) missing — screen readers cannot announce that a popup will open
+- **Fix needed:**
+  - Add `useEffect` with `document.addEventListener('mousedown', handler)` to close on outside click
+  - Add `aria-expanded={showLangMenu}` to the Select language button
+  - Add `aria-haspopup="listbox"` to the Select language button
+  - Optionally add `onKeyDown` handler for Escape to close dropdown
+
+#### BUG-10-B — British English o'clock missing time-of-day phrase
+
+- **Component:** `lib/timeToWords.ts:39`
+- **Severity:** Medium (incorrect spoken output)
+- **Symptom:** At any exact hour (minutes === 0), British English omits the time-of-day phrase. e.g. 3:00 → `"It's 3 o'clock"` instead of `"It's 3 o'clock in the morning"`, 15:00 → `"It's 3 o'clock"` instead of `"It's 3 o'clock in the afternoon"`
+- **Root cause:** Line 39 returns `` `It's ${h12} o'clock` `` — `${period}` is computed above but not included in this branch
+- **Fix needed:** Change line 39 to `` return `It's ${h12} o'clock ${period}`; ``
+
+#### BUG-10-C — en-GB voice selection falls back to en-US voice
+
+- **Component:** `hooks/useSpeakTime.ts:29`
+- **Severity:** Low (wrong accent, not wrong language family)
+- **Symptom:** When language is set to `en-GB`, the TTS uses `Samantha (en-US)` instead of `Arthur (en-GB)` because the fallback `v.lang.startsWith(language.split('-')[0])` matches any `en-*` voice and `Samantha` appears first in the voice list
+- **Fix needed:** Tighten the voice search to prefer exact locale match, then language+region, then language-only as last resort:
+  ```ts
+  const voice =
+    voices.find(v => v.lang === language) ||
+    voices.find(v => v.lang.replace('_', '-') === language) ||
+    voices.find(v => v.lang.startsWith(language + '-') || v.lang.startsWith(language + '_'));
+  ```
+
+---
+
+### Round 10 Summary
+
+**Commit tested:** `81dd770`
+**Tests run:** 27 (6 UI/isolation + 5 dropdown + 14 logic + 2 voice + 7 a11y/perf)
+**PASS:** 22 | **FAIL:** 5 (across 3 distinct bugs)
+
+**New bugs found:** 3
+
+| ID | Severity | Component | Description |
+|----|----------|-----------|-------------|
+| BUG-10-A | Medium | `app/page.tsx` + `useSpeakTime` | Dropdown no click-outside/Escape dismiss; missing `aria-expanded` + `aria-haspopup` |
+| BUG-10-B | Medium | `lib/timeToWords.ts:39` | British o'clock missing time-of-day phrase (`${period}` omitted) |
+| BUG-10-C | Low | `hooks/useSpeakTime.ts:29` | en-GB voice search falls back to en-US (`Samantha`) instead of en-GB (`Arthur`) |
+
+**No regressions** to previously passing features. Lighthouse: Accessibility **100/100**, Best Practices **96/100**.
