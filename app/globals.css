@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+html, body {
+  overscroll-behavior: none;
+  background-color: #1e1b4b; /* Default to dark */
+}
+
 @keyframes rain {
   0% { transform: translateY(0) scaleY(1); opacity: 0; }
   10% { opacity: 1; }

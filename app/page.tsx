@@ -176,6 +176,19 @@ export default function TimeExplorerApp() {
   const bgClass = isDay ? 'bg-sky-300' : 'bg-indigo-950';
   const textColor = isDay ? 'text-slate-800' : 'text-slate-100';
 
+  useEffect(() => {
+    const hexColor = isDay ? '#7dd3fc' : '#1e1b4b';
+    document.body.style.backgroundColor = hexColor;
+    
+    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (!metaThemeColor) {
+      metaThemeColor = document.createElement('meta');
+      metaThemeColor.setAttribute('name', 'theme-color');
+      document.head.appendChild(metaThemeColor);
+    }
+    metaThemeColor.setAttribute('content', hexColor);
+  }, [isDay]);
+
   if (!mounted) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-sky-300">
@@ -229,7 +242,7 @@ export default function TimeExplorerApp() {
         </div>
 
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex items-start z-20 pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 flex items-start z-20 pointer-events-none pt-[max(1rem,env(safe-area-inset-top))] md:pt-[max(1.5rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] md:pl-[max(1.5rem,env(safe-area-inset-left))] md:pr-[max(1.5rem,env(safe-area-inset-right))]">
           <div className="flex flex-col gap-1 pointer-events-auto flex-1 min-w-0 mr-3 items-start">
             {appMode === 'clock' && (
               <div className={cn("inline-flex items-center gap-2 backdrop-blur-md px-4 h-12 rounded-full shadow-sm border transition-colors max-w-full", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
@@ -337,7 +350,7 @@ export default function TimeExplorerApp() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-between pt-24 md:pt-8 pb-6 md:pb-8 px-4 md:px-8 z-10 relative overflow-hidden w-full max-w-7xl mx-auto min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-between pt-24 md:pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] md:pl-[max(2rem,env(safe-area-inset-left))] md:pr-[max(2rem,env(safe-area-inset-right))] z-10 relative overflow-hidden w-full max-w-7xl mx-auto min-h-0">
           
           {/* Analog Clock (Center) */}
           <div className="flex-1 flex items-center justify-center w-full min-h-0 mt-4 md:mt-0">

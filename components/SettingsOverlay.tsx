@@ -50,7 +50,7 @@ export function SettingsOverlay({
 
   return (
     <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
-      <div className="bg-white rounded-t-3xl p-6 flex flex-col gap-6 animate-in slide-in-from-bottom-full duration-300 text-slate-800 max-h-[85vh] overflow-y-auto">
+      <div className="bg-white rounded-t-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-6 animate-in slide-in-from-bottom-full duration-300 text-slate-800 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black text-slate-800">Settings</h2>
           <button 
