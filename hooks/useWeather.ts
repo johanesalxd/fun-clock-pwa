@@ -29,7 +29,28 @@ export function useWeather() {
           setWeatherData(data.current_weather);
           if (data.timezone) {
             setTimezone(data.timezone);
-            setLocationName(data.timezone.split('/').pop().replace('_', ' '));
+          }
+          
+          // Try to get city/country name using reverse geocoding
+          try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`);
+            const geoData = await geoRes.json();
+            if (geoData && geoData.address) {
+              const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.county;
+              const country = geoData.address.country_code ? geoData.address.country_code.toUpperCase() : '';
+              if (city && country) {
+                setLocationName(`${city}, ${country}`);
+              } else if (city) {
+                setLocationName(city);
+              } else if (data.timezone) {
+                setLocationName(data.timezone.split('/').pop().replace('_', ' '));
+              }
+            }
+          } catch (geoError) {
+            console.warn("Reverse geocoding failed, falling back to timezone name", geoError);
+            if (data.timezone) {
+              setLocationName(data.timezone.split('/').pop().replace('_', ' '));
+            }
           }
           
           const code = data.current_weather.weathercode;

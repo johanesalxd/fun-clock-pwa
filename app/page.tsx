@@ -229,36 +229,38 @@ export default function TimeExplorerApp() {
         </div>
 
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-20 pointer-events-none">
-          <div className="flex flex-col gap-1 pointer-events-auto">
+        <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex items-start z-20 pointer-events-none">
+          <div className="flex flex-col gap-1 pointer-events-auto flex-1 min-w-0 mr-3 items-start">
             {appMode === 'clock' && (
-              <div className={cn("flex items-center gap-1.5 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
-                <MapPin className={cn("w-4 h-4", isDay ? "text-slate-700" : "text-slate-200")} />
-                <span className={cn("text-sm font-bold", isDay ? "text-slate-800" : "text-slate-100")}>{locationName}</span>
+              <div className={cn("inline-flex items-center gap-2 backdrop-blur-md px-4 h-12 rounded-full shadow-sm border transition-colors max-w-full", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
+                <MapPin className={cn("w-5 h-5 shrink-0", isDay ? "text-slate-700" : "text-slate-200")} />
+                <span className={cn("text-sm font-bold truncate", isDay ? "text-slate-800" : "text-slate-100")}>{locationName}</span>
               </div>
             )}
           </div>
-          <div className="flex flex-col items-end gap-3 pointer-events-auto">
+          <div className="flex flex-col items-end gap-3 pointer-events-auto shrink-0">
             <div className="flex gap-3">
               {appMode === 'clock' && isSupported && (
                 <div className="relative" ref={langMenuRef}>
-                  <div className={cn("flex items-center backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
+                  <div className={cn("flex items-stretch backdrop-blur-md rounded-full shadow-sm border transition-colors h-12", isDay ? "bg-white/30 border-white/20" : "bg-black/20 border-white/10")}>
                     <button
                       aria-label="Speak current time"
                       onClick={() => speakTime(time)}
-                      className={cn("p-3 rounded-l-full transition-colors", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
+                      className={cn("px-3 flex items-center justify-center rounded-l-full transition-colors", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
                     >
-                      <Volume2 className="w-6 h-6" />
+                      <Volume2 className="w-5 h-5" />
                     </button>
-                    <div className={cn("w-px h-6", isDay ? "bg-white/30" : "bg-white/10")} />
+                    <div className="flex items-center">
+                      <div className={cn("w-px h-6", isDay ? "bg-white/30" : "bg-white/10")} />
+                    </div>
                     <button
                       aria-label="Select language"
                       aria-expanded={showLangMenu}
                       aria-haspopup="listbox"
                       onClick={() => setShowLangMenu(!showLangMenu)}
-                      className={cn("px-2 py-3 rounded-r-full transition-colors flex items-center justify-center min-w-[40px]", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
+                      className={cn("px-3 flex items-center justify-center rounded-r-full transition-colors min-w-[48px]", isDay ? "text-slate-800 hover:bg-white/50" : "text-slate-200 hover:bg-black/40")}
                     >
-                      <span className="text-xs font-bold">{language === 'en-US' ? 'EN' : language === 'en-GB' ? 'UK' : 'ID'}</span>
+                      <span className="text-sm font-bold">{language === 'en-US' ? 'EN' : language === 'en-GB' ? 'UK' : 'ID'}</span>
                     </button>
                   </div>
                   
@@ -298,14 +300,14 @@ export default function TimeExplorerApp() {
               <button 
                 aria-label="Help"
                 onClick={() => setShowHelp(true)}
-                className={cn("p-3 backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
+                className={cn("w-12 h-12 flex items-center justify-center backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
               >
                 <HelpCircle className="w-6 h-6" />
               </button>
               <button 
                 aria-label="Settings"
                 onClick={() => setShowSettings(true)}
-                className={cn("p-3 backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
+                className={cn("w-12 h-12 flex items-center justify-center backdrop-blur-md rounded-full shadow-sm border transition-colors", isDay ? "bg-white/30 border-white/20 text-slate-800 hover:bg-white/50" : "bg-black/20 border-white/10 text-slate-200 hover:bg-black/40")}
               >
                 <Settings className="w-6 h-6" />
               </button>
@@ -314,7 +316,7 @@ export default function TimeExplorerApp() {
               aria-label={appMode === 'timer' ? (isTimerRunning ? "Pause timer" : "Start timer") : (isPlaying ? "Pause clock" : "Play clock")}
               onClick={appMode === 'timer' ? toggleTimer : togglePlay}
               className={cn(
-                "p-3 rounded-full shadow-sm border-2 transition-colors",
+                "w-12 h-12 flex items-center justify-center rounded-full shadow-sm border-2 transition-colors",
                 (appMode === 'timer' ? isTimerRunning : isPlaying)
                   ? "bg-amber-100/80 border-amber-300 text-amber-700 hover:bg-amber-200" 
                   : "bg-green-100/80 border-green-300 text-green-700 hover:bg-green-200"
@@ -326,7 +328,7 @@ export default function TimeExplorerApp() {
               <button 
                 aria-label={appMode === 'timer' ? "Reset timer" : "Sync to current time"}
                 onClick={appMode === 'timer' ? resetTimer : syncToNow}
-                className="p-3 bg-blue-100/80 border-blue-300 text-blue-700 rounded-full shadow-sm hover:bg-blue-200 transition-all animate-in fade-in zoom-in duration-300"
+                className="w-12 h-12 flex items-center justify-center bg-blue-100/80 border-blue-300 text-blue-700 rounded-full shadow-sm hover:bg-blue-200 transition-all animate-in fade-in zoom-in duration-300"
               >
                 <RotateCcw className="w-6 h-6" strokeWidth={3} /> 
               </button>
