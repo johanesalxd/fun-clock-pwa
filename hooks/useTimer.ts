@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 /** Manages countdown timer state: start, pause, reset, and alarm triggering. */
 export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {

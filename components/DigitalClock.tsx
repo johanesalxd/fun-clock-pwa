@@ -1,6 +1,8 @@
 import React from 'react';
+
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { cn } from '../lib/utils';
+
+import { cn } from '@/lib/utils';
 
 const TimeColumn = ({ value, unit, colorClass, addTime }: { value: string, unit: 'hour'|'minute'|'second', colorClass: string, addTime: (amount: number, unit: 'hour'|'minute'|'second') => void }) => (
   <div className="flex flex-col items-center">
@@ -16,7 +18,18 @@ const TimeColumn = ({ value, unit, colorClass, addTime }: { value: string, unit:
   </div>
 );
 
-export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, isTimerMode, className }: any) {
+interface DigitalClockProps {
+  time: number;
+  onChangeTime: (updater: number | ((prev: number) => number)) => void;
+  showSeconds: boolean;
+  is24Hour: boolean;
+  alternateMode: boolean;
+  isTimerMode: boolean;
+  className?: string;
+}
+
+/** Digital time display with increment/decrement controls and AM/PM toggle. */
+export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, isTimerMode, className }: DigitalClockProps) {
   const date = new Date(time);
   
   const addTime = (amount: number, unit: 'hour' | 'minute' | 'second') => {

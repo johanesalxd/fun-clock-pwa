@@ -1,13 +1,22 @@
 import React from 'react';
-import { cn } from '../lib/utils';
 
-export function Toggle({ label, checked, onChange, color }: any) {
+import { cn } from '@/lib/utils';
+
+interface ToggleProps {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  color: 'red' | 'green' | 'blue' | 'yellow';
+}
+
+/** Accessible toggle switch with color-coded visual state. */
+export function Toggle({ label, checked, onChange, color }: ToggleProps) {
   const colorClasses = {
     red: 'bg-red-500',
     green: 'bg-green-500',
     blue: 'bg-blue-500',
     yellow: 'bg-yellow-500',
-  }[color as 'red'|'green'|'blue'|'yellow'];
+  }[color];
 
   return (
     <label className="flex items-center justify-between cursor-pointer bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">

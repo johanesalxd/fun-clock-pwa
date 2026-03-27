@@ -1,8 +1,17 @@
 import React from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
-import { cn } from '../lib/utils';
 
-export function DateDisplay({ time, onChangeTime, className }: any) {
+import { ChevronUp, ChevronDown } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+
+interface DateDisplayProps {
+  time: number;
+  onChangeTime: (updater: number | ((prev: number) => number)) => void;
+  className?: string;
+}
+
+/** Date display with previous/next day navigation. */
+export function DateDisplay({ time, onChangeTime, className }: DateDisplayProps) {
   const date = new Date(time);
   
   const addDays = (amount: number) => {

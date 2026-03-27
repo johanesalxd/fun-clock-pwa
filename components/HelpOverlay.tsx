@@ -1,7 +1,13 @@
 import React from 'react';
 import { HelpCircle, X } from 'lucide-react';
 
-export function HelpOverlay({ showHelp, setShowHelp }: any) {
+interface HelpOverlayProps {
+  showHelp: boolean;
+  setShowHelp: (v: boolean) => void;
+}
+
+/** Full-screen help overlay with features and usage instructions. */
+export function HelpOverlay({ showHelp, setShowHelp }: HelpOverlayProps) {
   if (!showHelp) return null;
 
   return (

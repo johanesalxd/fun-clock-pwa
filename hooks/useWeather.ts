@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 
+interface WeatherData {
+  temperature: number;
+  weathercode: number;
+  windspeed: number;
+  is_day: number;
+}
+
 /** Fetches weather data and timezone based on user's geolocation. */
 export function useWeather() {
-  const [weatherData, setWeatherData] = useState<any>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherCondition, setWeatherCondition] = useState<string>('clear');
   const [locationName, setLocationName] = useState<string>('Local');
   const [timezone, setTimezone] = useState<string>(() => {

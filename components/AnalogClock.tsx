@@ -7,7 +7,20 @@ const getSvgPoint = (e: React.PointerEvent | PointerEvent, svg: SVGSVGElement) =
   return pt.matrixTransform(svg.getScreenCTM()!.inverse());
 };
 
-export function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying, fullSecondsCircle, isTimerMode, timerValue, alternateMode }: any) {
+interface AnalogClockProps {
+  time: number;
+  onChangeTime: (updater: number | ((prev: number) => number)) => void;
+  showSeconds: boolean;
+  is24Hour: boolean;
+  isPlaying: boolean;
+  fullSecondsCircle: boolean;
+  isTimerMode: boolean;
+  timerValue: number;
+  alternateMode: boolean;
+}
+
+/** SVG analog clock with draggable hands and 12/24-hour display. */
+export function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying, fullSecondsCircle, isTimerMode, timerValue, alternateMode }: AnalogClockProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeHand, setActiveHand] = useState<'hour' | 'minute' | 'second' | null>(null);
   const lastAngleRef = useRef<number>(0);

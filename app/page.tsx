@@ -3,22 +3,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sun, Moon, RotateCcw, MapPin, Settings, Play, Pause, HelpCircle } from 'lucide-react';
 
-import { cn } from '../lib/utils';
-import { AUDIO_URLS } from '../lib/constants';
-
-import { AnalogClock } from '../components/AnalogClock';
-import { DigitalClock } from '../components/DigitalClock';
-import { DateDisplay } from '../components/DateDisplay';
-import { WeatherOverlay } from '../components/WeatherOverlay';
-import { HelpOverlay } from '../components/HelpOverlay';
-import { SettingsOverlay } from '../components/SettingsOverlay';
-
-import { useWeather } from '../hooks/useWeather';
-import { useClock } from '../hooks/useClock';
-import { useTimer } from '../hooks/useTimer';
+import { cn } from '@/lib/utils';
+import { AUDIO_URLS } from '@/lib/constants';
+import { AnalogClock } from '@/components/AnalogClock';
+import { DigitalClock } from '@/components/DigitalClock';
+import { DateDisplay } from '@/components/DateDisplay';
+import { WeatherOverlay } from '@/components/WeatherOverlay';
+import { HelpOverlay } from '@/components/HelpOverlay';
+import { SettingsOverlay } from '@/components/SettingsOverlay';
+import { useWeather } from '@/hooks/useWeather';
+import { useClock } from '@/hooks/useClock';
+import { useTimer } from '@/hooks/useTimer';
 
 export default function TimeExplorerApp() {
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   
@@ -28,9 +26,11 @@ export default function TimeExplorerApp() {
   const [alternateMode, setAlternateMode] = useState(false);
   const [fullSecondsCircle, setFullSecondsCircle] = useState(true);
 
-  const [stars, setStars] = useState<any[]>(() => {
-    if (typeof window === 'undefined') return [];
-    return Array.from({ length: 30 }).map(() => ({
+  const [stars, setStars] = useState<React.CSSProperties[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+    setStars(Array.from({ length: 30 }).map(() => ({
       width: Math.random() * 5 + 2 + 'px',
       height: Math.random() * 5 + 2 + 'px',
       top: Math.random() * 100 + '%',
@@ -38,8 +38,8 @@ export default function TimeExplorerApp() {
       animationDuration: Math.random() * 4 + 2 + 's',
       animationDelay: Math.random() * 2 + 's',
       opacity: Math.random() * 0.6 + 0.2
-    }));
-  });
+    })));
+  }, []);
 
   const { weatherData, weatherCondition, locationName, timezone } = useWeather();
   const { time, isPlaying, setIsPlaying, timeOffset, handleTimeChange, togglePlay, syncToNow } = useClock(timezone);
@@ -124,7 +124,6 @@ export default function TimeExplorerApp() {
   }, [effectiveIsMuted, currentAudioUrl]);
 
   useEffect(() => {
-    if (!mounted) return;
     if (prevIsDay.current !== null && prevIsDay.current !== isDay) {
       // Only play sounds if time is moving forward
       const isMovingForward = time > (prevTimeRef.current || 0);
@@ -144,7 +143,7 @@ export default function TimeExplorerApp() {
     }
     prevIsDay.current = isDay;
     prevTimeRef.current = time;
-  }, [isDay, mounted, time, effectiveIsMuted]);
+  }, [isDay, time, effectiveIsMuted]);
 
   const bgClass = isDay ? 'bg-sky-300' : 'bg-indigo-950';
   const textColor = isDay ? 'text-slate-800' : 'text-slate-100';

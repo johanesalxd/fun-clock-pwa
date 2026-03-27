@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 export function WeatherOverlay({ condition, isDay }: { condition: string, isDay: boolean }) {
-  const [rainDrops, setRainDrops] = useState<any[]>([]);
-  const [snowFlakes, setSnowFlakes] = useState<any[]>([]);
+  const [rainDrops, setRainDrops] = useState<React.CSSProperties[]>([]);
+  const [snowFlakes, setSnowFlakes] = useState<React.CSSProperties[]>([]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

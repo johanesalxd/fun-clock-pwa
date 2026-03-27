@@ -1,8 +1,10 @@
 import React from 'react';
+
 import { X, Volume2, VolumeX, CloudLightning, Music } from 'lucide-react';
-import { Toggle } from './Toggle';
-import { cn } from '../lib/utils';
-import { AUDIO_URLS } from '../lib/constants';
+
+import { Toggle } from '@/components/Toggle';
+import { cn } from '@/lib/utils';
+import { AUDIO_URLS } from '@/lib/constants';
 
 interface DisplaySettings {
   is24Hour: boolean;
