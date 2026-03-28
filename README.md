@@ -6,11 +6,13 @@ Kids Time Explorer is an interactive, educational web application designed to he
 
 - **Interactive Clock:** Drag the hands or use the buttons to time travel! The app features both an analog and a digital clock.
 - **Speak Time:** Tap the speaker icon to hear the current time spoken aloud! Supports General English, British English, and Bahasa Indonesia.
-- **Timer Mode:** Switch to Timer Mode to set a countdown and hear an alarm when time is up. The timer has simplified settings, always showing seconds and hiding irrelevant clock options.
+- **Timer Mode:** Switch to Timer Mode to set a countdown (up to 24 hours) and hear an alarm when time is up. Falls back to a Web Audio API oscillator and device vibration if the audio element is blocked by the platform.
 - **Real Weather & Location:** Uses your location to show the current weather outside (rain, snow, clear, cloudy, etc.) using the Open-Meteo API, and displays your city and country using Nominatim reverse geocoding.
 - **Day & Night Cycle:** Watch the sky change colors and stars appear automatically as day turns to night.
 - **Nature Sounds & Soundboard:** Hear ambient sounds like birds, crickets, rain, and thunder. Open the settings to play fun sounds anytime!
-- **Responsive Design:** Optimized for both mobile and tablet devices.
+- **Responsive Design:** Works on desktop, tablet, and mobile with orientation-aware layouts. Phone landscape and tablet portrait show rotate-to-correct-orientation overlays.
+- **PWA:** Fully installable as a Progressive Web App with custom icons, service worker, safe-area insets, and theme-color sync for a native-feel experience on iOS and Android.
+- **Accessibility:** Lighthouse Accessibility 100/100. WCAG AA contrast compliant in both day and night modes. Full screen reader support — all controls labeled, toggle switches use `role="switch"`, and the page has a visually hidden `h1`.
 
 ## How to Play
 
