@@ -3,6 +3,9 @@
 html, body {
   overscroll-behavior: none;
   background-color: #1e1b4b; /* Default to dark */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 @keyframes rain {

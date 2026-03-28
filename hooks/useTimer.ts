@@ -62,7 +62,7 @@ export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
       
       let newTimerValue = nextDate.getTime() - zeroDate.getTime();
       if (newTimerValue < 0) newTimerValue = 0;
-      if (newTimerValue > 86399000) newTimerValue = 86399000;
+      if (newTimerValue > 86400000) newTimerValue = 86400000;
       
       return newTimerValue;
     });
