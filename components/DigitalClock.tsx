@@ -25,12 +25,13 @@ interface DigitalClockProps {
   is24Hour: boolean;
   alternateMode: boolean;
   isTimerMode: boolean;
+  timerValue?: number;
   isDay?: boolean;
   className?: string;
 }
 
 /** Digital time display with increment/decrement controls and AM/PM toggle. */
-export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, isTimerMode, isDay = true, className }: DigitalClockProps) {
+export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, alternateMode, isTimerMode, timerValue, isDay = true, className }: DigitalClockProps) {
   const date = new Date(time);
   
   const addTime = (amount: number, unit: 'hour' | 'minute' | 'second') => {
@@ -55,6 +56,14 @@ export function DigitalClock({ time, onChangeTime, showSeconds, is24Hour, altern
   let h = date.getHours();
   let m = date.getMinutes();
   let s = date.getSeconds();
+
+  // Timer-only: 86400000ms = exactly 24:00:00. Date.setHours(24) wraps to 0,
+  // so override h/m/s directly when the raw timer value hits the cap.
+  if (isTimerMode && timerValue === 86400000) {
+    h = 24;
+    m = 0;
+    s = 0;
+  }
 
   if (alternateMode && !isTimerMode) {
     if (showSeconds) {

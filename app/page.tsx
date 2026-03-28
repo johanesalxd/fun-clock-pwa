@@ -446,6 +446,7 @@ export default function TimeExplorerApp() {
               is24Hour={appMode === 'timer' ? true : is24Hour}
               alternateMode={alternateMode}
               isTimerMode={appMode === 'timer'}
+              timerValue={appMode === 'timer' ? timerValue : undefined}
               isDay={isDay}
               className={cn("w-full", appMode === 'clock' ? "md:w-1/2 md:flex-1" : "max-w-md mx-auto")}
             />
