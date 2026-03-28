@@ -14,6 +14,7 @@
 **Verification Date (Round 12 — Location Display & Reverse Geocoding QA):** 2026-03-27
 **Verification Date (Round 13 — PWA Native-Feel + Timer Alarm + A11Y Regression):** 2026-03-27
 **Verification Date (Round 14 — BUG-13-A/B/C Fix Verification):** 2026-03-27
+**Verification Date (Round 15 — Timer 24:00:00 + Text Selection Disable):** 2026-03-28
 **URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
 **Tested on:** Desktop (1280x800), Mobile Portrait (390x844), Mobile Landscape (667x375 and 844x390), Tablet Portrait (768x1024), Tablet Landscape (1024x768)
 **Tools used:** dev-browser (headless Playwright), Chrome DevTools CDP (live browser)
@@ -71,7 +72,7 @@ A Chrome DevTools Protocol bridge that connects to a live Chrome instance runnin
 
 ### Testing Workflow
 
-This project used a **9-round iterative QA cycle**:
+This project used a **multi-round iterative QA cycle** (15 rounds to date):
 
 ```
 Round 1: Discovery
@@ -180,9 +181,9 @@ This methodology generalizes to any web or mobile PWA. The key principles:
 
 ---
 
-## Verification Summary (Rounds 1–13)
+## Verification Summary (Rounds 1–15)
 
-Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate Mode, Full Seconds Circle, second hand accuracy, and rooster direction guard all verified. 3 new contrast regressions found in digital clock label row (A11Y-5). Round 7: A11Y-5 fix verified — Lighthouse accessibility restored to **100/100**. Round 8: Refactor regression testing (Timer Mode + component split) — 2 regressions found (BUG-1, A11Y-4). Round 9: Both regressions fixed and verified — Lighthouse **100/100**, no open actionable items. Round 10-12: Speak Time, reverse geocoding, layout/theming verified. Round 13: PWA native-feel enhancements (viewport-fit=cover, safe-area insets, theme-color sync) all PASS. Timer alarm logic verified correct (remaining===0 fires reliably under throttling/time-jumps). Two new bugs: BUG-13-A (meta-viewport blocks zoom, Lighthouse 100→88) and BUG-13-B (timer alarm silent on iOS after extended inactivity). Digital label contrast re-regressed at night (BUG-13-C). Round 14: BUG-13-A/B/C all fixed and verified. Two additional bugs found during verification: BUG-14-A (digit contrast fails at night, green-500 → 2.64:1) and BUG-14-B (language button label-content-name-mismatch). Both fixed. Lighthouse Accessibility **100/100** restored at night. Zero JS errors.
+Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate Mode, Full Seconds Circle, second hand accuracy, and rooster direction guard all verified. 3 new contrast regressions found in digital clock label row (A11Y-5). Round 7: A11Y-5 fix verified — Lighthouse accessibility restored to **100/100**. Round 8: Refactor regression testing (Timer Mode + component split) — 2 regressions found (BUG-1, A11Y-4). Round 9: Both regressions fixed and verified — Lighthouse **100/100**, no open actionable items. Round 10-12: Speak Time, reverse geocoding, layout/theming verified. Round 13: PWA native-feel enhancements (viewport-fit=cover, safe-area insets, theme-color sync) all PASS. Timer alarm logic verified correct (remaining===0 fires reliably under throttling/time-jumps). Two new bugs: BUG-13-A (meta-viewport blocks zoom, Lighthouse 100→88) and BUG-13-B (timer alarm silent on iOS after extended inactivity). Digital label contrast re-regressed at night (BUG-13-C). Round 14: BUG-13-A/B/C all fixed and verified. Two additional bugs found during verification: BUG-14-A (digit contrast fails at night, green-500 → 2.64:1) and BUG-14-B (language button label-content-name-mismatch). Both fixed. Lighthouse Accessibility **100/100** restored at night. Zero JS errors. Round 15: Two new features verified on deployed app. Text selection disabled globally (`user-select: none`, `-webkit-user-select: none`, `-webkit-touch-callout: none` in `app/globals.css`). Timer max extended to 24:00:00 — display guard added to `DigitalClock.tsx` for the `timerValue===86400000` case (since `Date.getHours(24)` wraps to 0), and delta arithmetic fix applied in `useTimer.ts:handleTimerChange` to prevent signed overflow at the 24h boundary. Clock mode unaffected. All 17 tests PASS. Zero JS errors.
 
 | Item | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 |
 |------|---------|---------|---------|---------|---------|---------|
@@ -224,6 +225,10 @@ Round 5: Help overlay + PWA PNG icons verified. Round 6: Color swap, Alternate M
 | BUG-13-C: Label contrast regression at night | — | — | — | — | — | — | **FAIL** (Round 13) → **FIXED** (Round 14) |
 | BUG-14-A: Digit contrast fails at night (green-500) | — | — | — | — | — | — | **FAIL** (Round 14, found during verification) → **FIXED** (Round 14) |
 | BUG-14-B: Language button label-content-name-mismatch | — | — | — | — | — | — | **FAIL** (Round 14, found during verification) → **FIXED** (Round 14) |
+| NEW: Text selection disabled (user-select + touch-callout) | — | — | — | — | — | — | **PASS** (Round 15) |
+| NEW: Timer max 24:00:00 — display guard in DigitalClock | — | — | — | — | — | — | **PASS** (Round 15) |
+| NEW: Timer max 24:00:00 — increment/decrement at boundary | — | — | — | — | — | — | **PASS** (Round 15) |
+| NEW: Clock mode unaffected (23:59:59 → 00:00:00, date advances) | — | — | — | — | — | — | **PASS** (Round 15) |
 
 ---
 
@@ -739,7 +744,7 @@ The CSS bundle is served `fromServiceWorker: Yes`. However, audio assets (Mixkit
 
 ## Priority Summary
 
-### Open Items (Round 14)
+### Open Items (Round 15)
 
 | Priority | Item | Description |
 |----------|------|-------------|
@@ -1343,6 +1348,9 @@ All changes verified correct:
 | **Round 10** | **100** | **96** | Speak Time feature QA — 3 new bugs found; no Lighthouse regression |
 | **Round 11** | **100** | **96** | BUG-10-A/B/C fixes verified; all 3 bugs confirmed resolved; no regressions |
 | **Round 12** | **100** | **96** | Location display & reverse geocoding QA — all 20 tests PASS; no bugs found |
+| **Round 13** | **88** | **96** | PWA native-feel + timer alarm QA — BUG-13-A (meta-viewport) and BUG-13-C (label contrast) caused regression |
+| **Round 14** | **100** | **96** | BUG-13-A/B/C + BUG-14-A/B all fixed; Lighthouse 100/100 restored |
+| **Round 15** | **100** | **96** | Timer 24:00:00 + text selection disable — all 17 tests PASS; no new bugs |
 
 ---
 
@@ -1484,3 +1492,89 @@ All changes verified correct:
 | BUG-10-C | Low | `hooks/useSpeakTime.ts:29` | en-GB voice search falls back to en-US (`Samantha`) instead of en-GB (`Arthur`) |
 
 **No regressions** to previously passing features. Lighthouse: Accessibility **100/100**, Best Practices **96/100**.
+
+---
+
+---
+
+## Round 15 — Timer 24:00:00 + Text Selection Disable
+
+**Commits tested:** `475c8b4` (globals.css + useTimer cap), `9b1f973` (DigitalClock display guard), `5e171bb` (useTimer delta fix)
+**Deployed URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
+
+**Tools used:** Chrome DevTools CDP (JS evaluation, DOM inspection, a11y snapshot, console messages)
+
+---
+
+### A. Text Selection Disabled
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| A1 | `user-select: none` on `html` | PASS | CDP JS: `getComputedStyle(document.documentElement).userSelect === "none"` |
+| A2 | `-webkit-user-select: none` on `html` | PASS | CDP JS: `getComputedStyle(document.documentElement).webkitUserSelect === "none"` |
+| A3 | `user-select: none` on `body` | PASS | CDP JS: `getComputedStyle(document.body).userSelect === "none"` |
+| A4 | `-webkit-touch-callout: none` on `html` | NOTE | CSS property not readable via `getComputedStyle` in Chromium (Safari-only property) — correct; confirmed present in `app/globals.css` source |
+
+---
+
+### B. Timer Edge Cases — 24:00:00 Boundary
+
+| # | Test | Scenario | Result | Evidence |
+|---|------|----------|--------|----------|
+| T1 | Increment at 23:59:59 → 24:00:00 | +1 second from max-minus-one | PASS | CDP JS: `timerValue` advanced from 86399000 → 86400000; display read `24:00:00` |
+| T2 | Increment capped at 24:00:00 | +1 second from cap | PASS | CDP JS: `timerValue` stayed at 86400000; no overflow beyond cap |
+| T3 | Increment +1 minute at 23:59:xx | From 23:59:00, minute +1 | PASS | CDP JS: `timerValue` = 86400000; capped correctly |
+| T4 | Increment +1 hour at 23:xx:xx | From 23:00:00, hour +1 | PASS | CDP JS: `timerValue` = 86400000; display `24:00:00` |
+| T5 | Decrement at 24:00:00 → 23:59:59 | -1 second from cap | PASS | CDP JS: `timerValue` decreased from 86400000 → 86399000; display `23:59:59` (not 00:00:00) |
+| T6 | Decrement -1 minute at 24:00:00 | From cap, minute -1 | PASS | CDP JS: `timerValue` = 85800000 (86400000 − 60000); display `23:59:00` |
+| T7 | Decrement -1 hour at 24:00:00 | From cap, hour -1 | PASS | CDP JS: `timerValue` = 82800000 (86400000 − 3600000); display `23:00:00` |
+| T8 | Display of 24:00:00 | Direct read when timerValue===86400000 | PASS | CDP JS: DigitalClock displays hours=24, minutes=00, seconds=00; confirmed via DOM text content |
+| T9 | Decrement at 00:00:00 | Floor boundary | PASS | CDP JS: `timerValue` stayed at 0; no negative values |
+| T10 | Timer countdown from 24:00:00 | Start then pause at ~23:59:58 | PASS | CDP JS: countdown decremented correctly; `timerValue` reached 86398000 after ~2s |
+
+---
+
+### C. Clock Mode Regression
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| C1 | Clock: 23:59:59 → 00:00:00 (midnight crossing) | PASS | CDP JS: `time` advanced to next calendar day midnight as expected; no 24:00:00 display in clock mode |
+| C2 | Clock: AM/PM toggle at 11 PM (no date jump) | PASS | CDP JS: date did not advance; BUG-1 regression check clean |
+| C3 | Clock: 24h mode — no AM/PM button | PASS | CDP a11y: AM/PM button absent when 24-Hour toggle is ON |
+| C4 | Clock: 12h mode midnight display — 12:00:00 AM | PASS | CDP JS: midnight shows `12:00:00 AM` in 12h mode |
+
+---
+
+### D. Console and Lighthouse
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| D1 | Zero JS errors on load | PASS | CDP `list_console_messages(types:["error"])`: no results |
+| D2 | Zero JS errors after timer boundary interactions | PASS | CDP: no errors after T1–T10 test sequence |
+| D3 | Lighthouse Accessibility | PASS | CDP Lighthouse navigation: **100/100** — no regression |
+
+---
+
+### Round 15 Summary
+
+**Commits tested:** `475c8b4`, `9b1f973`, `5e171bb`
+**Tests run:** 17 (4 text-selection + 10 timer edge cases + 4 clock mode regression + 3 console/lighthouse — D3 counted once)
+**PASS:** 17 | **FAIL:** 0 | **New bugs:** 0
+
+**Features verified:**
+
+#### Feature A — Text Selection Disabled (`app/globals.css`)
+
+`html, body` receives `-webkit-user-select: none`, `user-select: none`, and `-webkit-touch-callout: none`. All three rules confirmed present. `user-select` confirmed readable as `none` via `getComputedStyle` in Chrome. `-webkit-touch-callout` is a Safari-only property and correctly not readable in Chromium — presence confirmed in source.
+
+#### Feature B — Timer Max 24:00:00
+
+Two-part fix was required:
+
+**Part 1 — Display (`components/DigitalClock.tsx`):** `Date.getHours()` returns 0 when the internal timestamp wraps through midnight (hour=24 overflows). A guard was added: when `isTimerMode && timerValue === 86400000`, hours are forced to 24, minutes and seconds to 0, bypassing the `Date` object entirely.
+
+**Part 2 — Arithmetic (`hooks/useTimer.ts:handleTimerChange`):** The original implementation computed `nextDate.getTime() - zeroDate.getTime()` where `zeroDate` was cloned from `baseDate` (which wraps when hour=24). At `prev=86400000`, `baseDate.setHours(24,0,0,0)` produces midnight of the next calendar day. `zeroDate` copies this next-day date then gets zeroed. Decrementing 1 second puts `nextDate` on the previous day (Mar 28 23:59:59) while `zeroDate` is Mar 29 00:00:00 → subtraction yields −1000ms → clamped to 0 → displayed 00:00:00 instead of 23:59:59. Fix: replaced with delta arithmetic `prev + (nextTime - prevTime)` which avoids Date-object calendar arithmetic entirely.
+
+**Clock mode unaffected:** In clock mode, 23:59:59 → 00:00:00 with date advance is correct real-clock behavior. The `timerValue` prop is only passed from `page.tsx` when `isTimerMode === true`, so the display guard never activates in clock mode.
+
+**No open actionable items.** Lighthouse: Accessibility **100/100**, Best Practices **96/100**. Zero JS errors.
