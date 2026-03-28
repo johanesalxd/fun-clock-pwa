@@ -56,11 +56,11 @@ export function useTimer(playAlarmSound: () => void, stopAlarm: () => void) {
       const prevTime = baseDate.getTime();
       const nextTime = typeof updater === 'function' ? updater(prevTime) : updater;
       
-      const nextDate = new Date(nextTime);
-      const zeroDate = new Date(baseDate);
-      zeroDate.setHours(0, 0, 0, 0);
-      
-      let newTimerValue = nextDate.getTime() - zeroDate.getTime();
+      // Use delta from prevTime rather than (nextDate - zeroDate).
+      // zeroDate subtraction breaks when setHours(24) wraps baseDate to the
+      // next calendar day, causing nextDate to land on a different day than
+      // zeroDate and producing a negative or wrong duration.
+      let newTimerValue = prev + (nextTime - prevTime);
       if (newTimerValue < 0) newTimerValue = 0;
       if (newTimerValue > 86400000) newTimerValue = 86400000;
       
