@@ -59,29 +59,6 @@ export default function TimeExplorerApp() {
   const alarmRef = useRef<HTMLAudioElement>(null);
   const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
-  
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const fallbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    const initAudio = () => {
-      if (!audioCtxRef.current) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioContextClass) {
-          audioCtxRef.current = new AudioContextClass();
-        }
-      }
-      if (audioCtxRef.current?.state === 'suspended') {
-        audioCtxRef.current.resume();
-      }
-    };
-    document.addEventListener('click', initAudio, { once: true });
-    document.addEventListener('touchstart', initAudio, { once: true });
-    return () => {
-      document.removeEventListener('click', initAudio);
-      document.removeEventListener('touchstart', initAudio);
-    };
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -119,40 +96,6 @@ export default function TimeExplorerApp() {
       clearTimeout(alarmTimeoutRef.current);
       alarmTimeoutRef.current = null;
     }
-    if (fallbackIntervalRef.current) {
-      clearInterval(fallbackIntervalRef.current);
-      fallbackIntervalRef.current = null;
-    }
-  }, []);
-
-  const playFallbackBeep = useCallback(() => {
-    if (!audioCtxRef.current) return;
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-    
-    const playBeep = () => {
-      if (!audioCtxRef.current) return;
-      const osc = audioCtxRef.current.createOscillator();
-      const gain = audioCtxRef.current.createGain();
-      
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(880, audioCtxRef.current.currentTime);
-      osc.frequency.setValueAtTime(1108.73, audioCtxRef.current.currentTime + 0.1);
-      
-      gain.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
-      gain.gain.linearRampToValueAtTime(0.3, audioCtxRef.current.currentTime + 0.05);
-      gain.gain.linearRampToValueAtTime(0, audioCtxRef.current.currentTime + 0.5);
-      
-      osc.connect(gain);
-      gain.connect(audioCtxRef.current.destination);
-      
-      osc.start();
-      osc.stop(audioCtxRef.current.currentTime + 0.5);
-    };
-
-    playBeep();
-    fallbackIntervalRef.current = setInterval(playBeep, 1000);
   }, []);
 
   const playAlarmSound = useCallback(() => {
@@ -166,6 +109,7 @@ export default function TimeExplorerApp() {
           body: "Your timer has finished.",
           icon: "/apple-touch-icon.png",
           requireInteraction: true,
+          silent: true,
         });
         
         notification.onclick = () => {
@@ -180,8 +124,7 @@ export default function TimeExplorerApp() {
     if (alarmRef.current) {
       alarmRef.current.currentTime = 0;
       alarmRef.current.play().catch(e => {
-        console.log("Alarm play blocked, using fallback", e);
-        playFallbackBeep();
+        console.log("Alarm play blocked", e);
       });
       
       if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
@@ -189,7 +132,7 @@ export default function TimeExplorerApp() {
         stopAlarm();
       }, 15000);
     }
-  }, [stopAlarm, playFallbackBeep]);
+  }, [stopAlarm]);
 
   const [appMode, setAppMode] = useState<'clock' | 'timer'>('clock');
   const {
