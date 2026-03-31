@@ -5,5 +5,5 @@ export const AUDIO_URLS = {
   snow:     'https://assets.mixkit.co/active_storage/sfx/2608/2608-preview.mp3',
   rooster:  'https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3',
   night:    'https://assets.mixkit.co/active_storage/sfx/39/39-preview.mp3',
-  alarm:    'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3',
+  alarm:    '/alarm.mp3',
 } as const;

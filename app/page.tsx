@@ -59,7 +59,29 @@ export default function TimeExplorerApp() {
 
   const alarmRef = useRef<HTMLAudioElement>(null);
   const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const canPlayThroughListenerRef = useRef<(() => void) | null>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
+
+  // Unlock the AudioContext on first user interaction so the oscillator
+  // fallback can play even after gesture context expires.
+  useEffect(() => {
+    const unlock = () => {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -89,9 +111,17 @@ export default function TimeExplorerApp() {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(0);
     }
+    if (canPlayThroughListenerRef.current && alarmRef.current) {
+      alarmRef.current.removeEventListener('canplaythrough', canPlayThroughListenerRef.current);
+      canPlayThroughListenerRef.current = null;
+    }
     if (alarmRef.current) {
       alarmRef.current.pause();
       alarmRef.current.currentTime = 0;
+    }
+    if (oscillatorRef.current) {
+      try { oscillatorRef.current.stop(); } catch (_) {}
+      oscillatorRef.current = null;
     }
     if (alarmTimeoutRef.current) {
       clearTimeout(alarmTimeoutRef.current);
@@ -112,7 +142,6 @@ export default function TimeExplorerApp() {
           requireInteraction: true,
           silent: true,
         });
-        
         notification.onclick = () => {
           window.focus();
           notification.close();
@@ -122,17 +151,74 @@ export default function TimeExplorerApp() {
       }
     }
 
+    // Always clear any previous auto-stop timeout before starting the alarm.
+    if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
+
+    // Helper: start the Web Audio oscillator fallback.
+    // The AudioContext was unlocked on first user interaction so it stays
+    // resumable even after the gesture context has long expired.
+    const playOscillator = () => {
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+      resume.then(() => {
+        if (oscillatorRef.current) {
+          try { oscillatorRef.current.stop(); } catch (_) {}
+        }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);          // A5
+        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.25);   // E5
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.5);
+        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.75);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        oscillatorRef.current = osc;
+      }).catch(() => {});
+    };
+
     if (alarmRef.current) {
+      // Fix 3: ensure the element is never muted before playing.
+      alarmRef.current.muted = false;
       alarmRef.current.currentTime = 0;
-      alarmRef.current.play().catch(e => {
-        console.log("Alarm play blocked", e);
-      });
-      
-      if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
-      alarmTimeoutRef.current = setTimeout(() => {
-        stopAlarm();
-      }, 15000);
+
+      // Fix 5: check readyState — if audio is not buffered, fall back to
+      // the oscillator immediately rather than waiting silently.
+      const ready = alarmRef.current.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
+      if (ready) {
+        alarmRef.current.play().catch(() => {
+          // Fix 1: HTMLAudioElement.play() blocked (autoplay policy expired) —
+          // fall back to the Web Audio oscillator which bypasses the restriction.
+          playOscillator();
+        });
+      } else {
+        // Audio not yet buffered — use oscillator now and retry the element
+        // once it has loaded. Track the listener in a ref so stopAlarm() can
+        // remove it if the alarm is dismissed before the audio buffers.
+        playOscillator();
+        if (canPlayThroughListenerRef.current) {
+          alarmRef.current.removeEventListener('canplaythrough', canPlayThroughListenerRef.current);
+        }
+        const onCanPlay = () => {
+          alarmRef.current?.removeEventListener('canplaythrough', onCanPlay);
+          canPlayThroughListenerRef.current = null;
+          alarmRef.current!.muted = false;
+          alarmRef.current!.play().catch(() => {});
+        };
+        canPlayThroughListenerRef.current = onCanPlay;
+        alarmRef.current.addEventListener('canplaythrough', onCanPlay);
+      }
+    } else {
+      // No audio element available at all — oscillator is the only option.
+      playOscillator();
     }
+
+    alarmTimeoutRef.current = setTimeout(() => {
+      stopAlarm();
+    }, 15000);
   }, [stopAlarm]);
 
   const [appMode, setAppMode] = useState<'clock' | 'timer'>('clock');
@@ -160,8 +246,18 @@ export default function TimeExplorerApp() {
   };
 
   const date = new Date(time);
-  const hour24 = date.getHours();
-  
+  // Extract hours and minutes using explicit timezone formatting to avoid
+  // relying on the fake-timestamp pattern in useClock, making this correct
+  // regardless of how `time` is internally represented.
+  const tzTimeParts = date.toLocaleString('en-US', {
+    timeZone: timezone,
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).split(':');
+  const hour24 = parseInt(tzTimeParts[0]);
+  const minute = parseInt(tzTimeParts[1]);
+
   let isDay = hour24 >= 6 && hour24 < 18;
   if (sunrise && sunset) {
     const sunriseMatch = sunrise.match(/T(\d{2}):(\d{2})/);
@@ -169,12 +265,15 @@ export default function TimeExplorerApp() {
     if (sunriseMatch && sunsetMatch) {
       const sunriseMinutes = parseInt(sunriseMatch[1]) * 60 + parseInt(sunriseMatch[2]);
       const sunsetMinutes = parseInt(sunsetMatch[1]) * 60 + parseInt(sunsetMatch[2]);
-      const currentMinutes = hour24 * 60 + date.getMinutes();
+      const currentMinutes = hour24 * 60 + minute;
       isDay = currentMinutes >= sunriseMinutes && currentMinutes < sunsetMinutes;
     }
   }
-  
-  const appDateStr = new Date(time).toLocaleDateString('en-US', { timeZone: timezone });
+
+  // new Date(time) uses the fake timestamp from useClock (device-local frame),
+  // so omit timeZone here to stay consistent with that pattern.
+  // new Date() is a real UTC timestamp and requires explicit timeZone conversion.
+  const appDateStr = new Date(time).toLocaleDateString('en-US');
   const realDateStr = new Date().toLocaleDateString('en-US', { timeZone: timezone });
   const isCurrentDate = appDateStr === realDateStr;
 
