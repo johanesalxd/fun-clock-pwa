@@ -12,6 +12,8 @@ export function useWeather() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherCondition, setWeatherCondition] = useState<string>('clear');
   const [locationName, setLocationName] = useState<string>('Local');
+  const [sunrise, setSunrise] = useState<string | null>(null);
+  const [sunset, setSunset] = useState<string | null>(null);
   const [timezone, setTimezone] = useState<string>(() => {
     if (typeof Intl !== 'undefined') {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -24,11 +26,15 @@ export function useWeather() {
       navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`);
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=sunrise,sunset&timezone=auto`);
           const data = await res.json();
           setWeatherData(data.current_weather);
           if (data.timezone) {
             setTimezone(data.timezone);
+          }
+          if (data.daily && data.daily.sunrise && data.daily.sunset) {
+            setSunrise(data.daily.sunrise[0]);
+            setSunset(data.daily.sunset[0]);
           }
           
           // Try to get city/country name using reverse geocoding
@@ -70,5 +76,5 @@ export function useWeather() {
     }
   }, []);
 
-  return { weatherData, weatherCondition, locationName, timezone };
+  return { weatherData, weatherCondition, locationName, timezone, sunrise, sunset };
 }

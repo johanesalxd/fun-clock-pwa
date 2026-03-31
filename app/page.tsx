@@ -15,6 +15,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useClock } from '@/hooks/useClock';
 import { useTimer } from '@/hooks/useTimer';
 import { useSpeakTime } from '@/hooks/useSpeakTime';
+import { useWakeLock } from '@/hooks/useWakeLock';
 
 export default function TimeExplorerApp() {
   const [mounted, setMounted] = useState(false);
@@ -33,7 +34,6 @@ export default function TimeExplorerApp() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStars(Array.from({ length: 30 }).map(() => ({
       width: Math.random() * 5 + 2 + 'px',
       height: Math.random() * 5 + 2 + 'px',
@@ -45,9 +45,10 @@ export default function TimeExplorerApp() {
     })));
   }, []);
 
-  const { weatherData, weatherCondition, locationName, timezone } = useWeather();
+  const { weatherData, weatherCondition, locationName, timezone, sunrise, sunset } = useWeather();
   const { time, isPlaying, setIsPlaying, timeOffset, handleTimeChange, togglePlay, syncToNow } = useClock(timezone);
   const { language, setLanguage, speakTime, isSupported } = useSpeakTime();
+  useWakeLock();
 
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -160,7 +161,18 @@ export default function TimeExplorerApp() {
 
   const date = new Date(time);
   const hour24 = date.getHours();
-  const isDay = hour24 >= 6 && hour24 < 18;
+  
+  let isDay = hour24 >= 6 && hour24 < 18;
+  if (sunrise && sunset) {
+    const sunriseMatch = sunrise.match(/T(\d{2}):(\d{2})/);
+    const sunsetMatch = sunset.match(/T(\d{2}):(\d{2})/);
+    if (sunriseMatch && sunsetMatch) {
+      const sunriseMinutes = parseInt(sunriseMatch[1]) * 60 + parseInt(sunriseMatch[2]);
+      const sunsetMinutes = parseInt(sunsetMatch[1]) * 60 + parseInt(sunsetMatch[2]);
+      const currentMinutes = hour24 * 60 + date.getMinutes();
+      isDay = currentMinutes >= sunriseMinutes && currentMinutes < sunsetMinutes;
+    }
+  }
   
   const appDateStr = new Date(time).toLocaleDateString('en-US', { timeZone: timezone });
   const realDateStr = new Date().toLocaleDateString('en-US', { timeZone: timezone });
