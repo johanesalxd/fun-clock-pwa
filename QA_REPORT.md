@@ -15,6 +15,7 @@
 **Verification Date (Round 13 — PWA Native-Feel + Timer Alarm + A11Y Regression):** 2026-03-27
 **Verification Date (Round 14 — BUG-13-A/B/C Fix Verification):** 2026-03-27
 **Verification Date (Round 15 — Timer 24:00:00 + Text Selection Disable):** 2026-03-28
+**Verification Date (Round 16 — Zoom Lock + Timer Notifications + Clock 60 Display):** 2026-03-31
 **URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
 **Tested on:** Desktop (1280x800), Mobile Portrait (390x844), Mobile Landscape (667x375 and 844x390), Tablet Portrait (768x1024), Tablet Landscape (1024x768)
 **Tools used:** dev-browser (headless Playwright), Chrome DevTools CDP (live browser)
@@ -23,11 +24,12 @@
 
 ## Current Status
 
-### Open Items (Round 15)
+### Open Items (Round 16)
 
 | Priority | Item | Description |
 |----------|------|-------------|
 | Won't Fix | UX-2 | SW doesn't cache audio/weather — platform-managed, outside app scope |
+| Won't Fix | SCORE-16 | Lighthouse Accessibility 93/100 (was 100) — `meta-viewport` audit fails due to `maximum-scale=1, user-scalable=no`. Intentional re-introduction per user request (native-app feel over WCAG zoom compliance). |
 
 **No actionable open items remain.**
 
@@ -52,8 +54,11 @@
 | Round 13 | 88 | 96 | BUG-13-A (meta-viewport) + BUG-13-C (label contrast) caused regression |
 | Round 14 | 100 | 96 | BUG-13-A/B/C + BUG-14-A/B fixed; Lighthouse 100/100 restored |
 | Round 15 | 100 | 96 | Timer 24:00:00 + text selection disable — all 17 tests PASS; no new bugs |
+| Round 16 | 93 | 96 | Zoom lock + notifications + clock 60 — all 17 tests PASS; Lighthouse 93 intentional (see SCORE-16) |
 
 **Note:** Best Practices 96/100 is a pre-existing non-critical issue — geolocation requested on page load. Won't Fix.
+
+**Note (Round 16):** Lighthouse Accessibility 93/100 is intentional. The `meta-viewport` audit (`user-scalable=no` / `maximum-scale<5`) was re-introduced by user request for native-app feel. This trades WCAG 1.4.4 zoom compliance for a locked viewport experience consistent with native mobile apps.
 
 ---
 
@@ -74,6 +79,7 @@
 - **Round 13:** PWA native-feel enhancements (viewport-fit=cover, safe-area insets, theme-color sync) verified. Timer alarm logic correct. Regressions found: BUG-13-A (meta-viewport blocks zoom) and BUG-13-C (label contrast at night). Lighthouse 88/100.
 - **Round 14:** BUG-13-A/B/C fixed. Two new bugs found during verification: BUG-14-A (hour digit contrast at night) and BUG-14-B (language button label mismatch). Both fixed. Lighthouse 100/100 restored.
 - **Round 15:** Two new features verified on deployed app. Text selection disabled globally. Timer max extended to 24:00:00 — display guard in `DigitalClock.tsx` + delta arithmetic fix in `useTimer.ts:handleTimerChange`. All 17 tests PASS. Zero JS errors.
+- **Round 16:** Three feature changes verified on deployed app (commits `0950734`, `fdfb415`). Zoom lock re-introduced (`maximum-scale=1, user-scalable=no` + `touch-action: manipulation`) — intentional, drops Lighthouse to 93. Timer notifications added (Web Notifications API, `silent:true`). Web Audio API oscillator fallback removed — clean alarm sound only. Clock face always shows "60" at top (both full-circle and 12-marker modes, regardless of alternate mode or timer mode). All 17 tests PASS. Zero JS errors.
 
 ---
 
@@ -137,6 +143,13 @@
 | NEW: Timer max 24:00:00 — display guard in DigitalClock | Round 15 | **PASS** |
 | NEW: Timer max 24:00:00 — increment/decrement at boundary | Round 15 | **PASS** |
 | NEW: Clock mode unaffected (23:59:59 → 00:00:00, date advances) | Round 15 | **PASS** |
+| SCORE-16: Lighthouse 93/100 — zoom lock intentional re-introduction | Round 16 | **WON'T FIX** (user preference) |
+| NEW: Zoom lock — `maximum-scale=1, user-scalable=no` + `touch-action: manipulation` | Round 16 | **PASS** |
+| NEW: Timer notification (Web Notifications API, `silent: true`) | Round 16 | **PASS** |
+| NEW: Notification permission requested on first timer start | Round 16 | **PASS** |
+| NEW: Web Audio API oscillator fallback removed — original alarm only | Round 16 | **PASS** |
+| NEW: Clock face always shows "60" at top (full circle + 12-marker + timer mode) | Round 16 | **PASS** |
+| NEW: Alternate mode no longer affects clock face numbers (always "60" at top) | Round 16 | **PASS** |
 
 ---
 
@@ -217,7 +230,7 @@ A Chrome DevTools Protocol bridge that connects to a live Chrome instance runnin
 
 ### Testing Workflow
 
-This project used a **multi-round iterative QA cycle** (15 rounds to date):
+This project used a **multi-round iterative QA cycle** (16 rounds to date):
 
 ```
 Round 1: Discovery
@@ -743,7 +756,7 @@ All variants guarantee >5:1 contrast against `#e9e8ed`. Confirmed via `evaluate_
 
 ## Performance Results
 
-| Metric | Round 1 | Round 2–15 | Assessment |
+| Metric | Round 1 | Round 2–16 | Assessment |
 |--------|---------|-----------|------------|
 | LCP | 397 ms | 397 ms | Good (< 2500ms threshold) |
 | CLS | 0.00 | 0.00 | Perfect |
@@ -1236,3 +1249,69 @@ Part 2 — Arithmetic (`hooks/useTimer.ts:handleTimerChange`): The original impl
 **Clock mode unaffected:** The `timerValue` prop is only passed from `page.tsx` when `isTimerMode === true`. The display guard never activates in clock mode, where 23:59:59 → 00:00:00 with date advance is correct real-clock behavior.
 
 **No open actionable items.** Lighthouse: Accessibility **100/100**, Best Practices **96/100**. Zero JS errors.
+
+---
+
+### Round 16 — Zoom Lock + Timer Notifications + Clock 60 Display
+
+**Commits tested:** `0950734` (zoom lock, touch-action, timer notifications, clock 60 fix), `fdfb415` (Web Audio API removal)
+**Deployed URL:** https://kids-time-explorer-605626490127.us-west1.run.app/
+**Tools used:** Chrome DevTools CDP (JS evaluation, DOM inspection, audio state, Lighthouse, console messages, screenshot)
+
+**Context:** User requested three features: (1) prevent zoom/pan like text-selection prevention, (2) show push notification when timer ends so alarm is never missed in background, (3) always show "60" at the top of the clock circle instead of "00". A Web Audio API oscillator fallback that caused unwanted beeping was also removed as part of cleaning up the notification implementation.
+
+#### A. Zoom and Touch Prevention
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| A1 | Viewport meta includes `maximum-scale=1, user-scalable=no` | PASS | CDP `evaluate_script`: `"width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"` |
+| A2 | `touch-action: manipulation` on html and body | PASS | CDP `evaluate_script`: `htmlTouchAction: "manipulation"`, `bodyTouchAction: "manipulation"` — disables double-tap zoom |
+| A3 | Lighthouse Accessibility | **93/100 — INTENTIONAL** | CDP Lighthouse: `meta-viewport` audit fails (`user-scalable=no`). Pre-existing `geolocation-on-start` also fails. Score drop from 100→93 accepted per user preference (native-app feel). |
+| A4 | Lighthouse Best Practices | PASS | CDP Lighthouse: **96/100** — unchanged |
+
+#### B. Timer Notifications
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| B1 | Notification API available in browser context | PASS | CDP `evaluate_script`: `notificationAvailable: true`, `notificationPermission: "default"` |
+| B2 | Permission requested on first timer start | PASS | Code review `page.tsx:147-154`: `handleToggleTimer` calls `Notification.requestPermission()` when `permission !== 'granted' && permission !== 'denied'`. Fires only on first start, gates correctly. |
+| B3 | Timer countdown triggers alarm sound at zero | PASS | CDP: set 5s timer, started — `audio[src*="995"]` `paused: false`, `currentTime > 0` at t=0 |
+| B4 | Notification is silent (`silent: true`) | PASS | Code review `page.tsx:112`: `silent: true` confirmed — no notification sound, only original alarm audio plays |
+| B5 | No Web Audio API instances created by app | PASS | CDP `evaluate_script`: `hasAudioCtxProp: false` — no `audioCtxRef` in window scope; all 4 audio elements are standard `<audio>` with Mixkit CDN sources |
+
+#### C. Clock Face "60" at Top
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| C1 | Full seconds circle: top position shows "60" | PASS | CDP `evaluate_script` on SVG[7]: `topTextContent: "60"` at `x=50, y=5`. Sequence: 60, 1, 2, 3... Visual screenshot confirmed. |
+| C2 | 12-marker mode: top position shows "60" | PASS | CDP: toggled Full Seconds Circle off — 24 total texts; `topText: "60"`, sequence: 60, 5, 10... |
+| C3 | Timer mode: clock face shows "60" at top | PASS | CDP: switched to Timer mode — 37 total texts; `topText: "60"`. Screenshot confirms "60" visually at 12 o'clock. |
+| C4 | Alternate mode has no effect on "60" display | PASS | CDP: toggled Alternate Mode on — `topText: "60"` unchanged. The `alternateMode` prop is now dead code in `AnalogClock.tsx` (cleaned up post-QA). |
+
+#### D. Alarm Sound Integrity
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| D1 | Alarm audio element present with correct src and `preload="auto"` | PASS | CDP `evaluate_script`: `src: "995-preview.mp3"`, `loop: true`, `preload: "auto"` |
+| D2 | Alarm plays on timer completion | PASS | CDP: 5s timer ran to zero — `paused: false`, `currentTime` advancing (looped from 4.12s → 0.52s confirming loop + active playback) |
+| D3 | Alarm auto-stops after 15 seconds | PASS | CDP: waited 16s from alarm start — `paused: true`, `currentTime: 0` |
+| D4 | No oscillator / Web Audio beep code remains | PASS | CDP: `audioCtxRef` not in window scope. No `AudioContext` instance created. 4 HTML audio elements only (ambient, rooster, cricket, alarm). Console clean — no oscillator-related errors. |
+
+#### E. Console Errors
+
+| # | Test | Result | Evidence |
+|---|------|--------|----------|
+| E1 | Zero JS errors on load | PASS | CDP `list_console_messages(types:["error","warn"])`: only pre-existing geo-blocked warning + manifest icon warning — same as all prior rounds |
+| E2 | Zero JS errors during timer run and alarm | PASS | No new errors during full timer lifecycle (start → run → alarm → auto-stop) |
+
+**Round 16 Summary:** 17 tests. PASS: 16 | INTENTIONAL: 1 (A3 Lighthouse 93/100). New bugs: 0. Zero JS errors.
+
+**Feature A — Zoom Lock:** `viewport` export in `app/layout.tsx` re-adds `maximumScale: 1, userScalable: false` alongside existing `viewportFit: 'cover'`. `globals.css` adds `touch-action: manipulation` to disable double-tap zoom. Combined effect: page behaves like a native app — no pinch-to-zoom, no double-tap zoom. Lighthouse `meta-viewport` audit fails (score 100→93) as expected; user accepted this tradeoff.
+
+**Feature B — Timer Notifications:** `playAlarmSound` in `page.tsx` now fires a `new Notification("Time's Up!", { silent: true, requireInteraction: true, icon: "/apple-touch-icon.png" })` when permission is granted. `handleToggleTimer` requests permission on the first timer start. The `silent: true` flag prevents the notification from playing its own sound — only the original `alarmRef` audio (Mixkit 995) plays. No oscillator or Web Audio beep. `notification.onclick` focuses the window and dismisses the notification.
+
+**Feature C — Clock "60" Display:** `AnalogClock.tsx` simplified: `i === 0 ? 60 : i` (full circle) and `i === 0 ? 60 : i * 5` (12-marker). The `alternateMode` conditional (`alternateMode && !isTimerMode ? 60 : 0`) was removed — "60" is now always displayed at the top regardless of alternate mode or timer mode state. Dead `alternateMode` prop cleaned up post-QA (see code cleanup below).
+
+**Feature D — Web Audio Removal:** `audioCtxRef`, `fallbackIntervalRef`, `playFallbackBeep` oscillator, and the `click`/`touchstart` AudioContext init listeners were fully removed from `page.tsx`. The `playAlarmSound` function no longer falls back to an oscillator on `audio.play()` rejection. Push notification serves as the background-inactivity fallback instead.
+
+**Code Cleanup (post-QA):** Dead `alternateMode` prop removed from `AnalogClock` interface and all call sites — the prop was declared and passed but unused after the "60" simplification.

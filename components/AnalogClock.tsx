@@ -16,11 +16,10 @@ interface AnalogClockProps {
   fullSecondsCircle: boolean;
   isTimerMode: boolean;
   timerValue: number;
-  alternateMode: boolean;
 }
 
 /** SVG analog clock with draggable hands and 12/24-hour display. */
-export function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying, fullSecondsCircle, isTimerMode, timerValue, alternateMode }: AnalogClockProps) {
+export function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlaying, fullSecondsCircle, isTimerMode, timerValue }: AnalogClockProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeHand, setActiveHand] = useState<'hour' | 'minute' | 'second' | null>(null);
   const lastAngleRef = useRef<number>(0);

@@ -402,7 +402,6 @@ export default function TimeExplorerApp() {
                 fullSecondsCircle={fullSecondsCircle}
                 isTimerMode={appMode === 'timer'}
                 timerValue={timerValue}
-                alternateMode={alternateMode}
               />
             </div>
           </div>
