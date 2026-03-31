@@ -7,6 +7,7 @@ export function useSpeakTime() {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSupported(false);
     }
   }, []);

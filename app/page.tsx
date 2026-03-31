@@ -31,7 +31,9 @@ export default function TimeExplorerApp() {
   const [stars, setStars] = useState<React.CSSProperties[]>([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStars(Array.from({ length: 30 }).map(() => ({
       width: Math.random() * 5 + 2 + 'px',
       height: Math.random() * 5 + 2 + 'px',
@@ -158,6 +160,23 @@ export default function TimeExplorerApp() {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
 
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        const notification = new Notification("Time's Up!", {
+          body: "Your timer has finished.",
+          icon: "/apple-touch-icon.png",
+          requireInteraction: true,
+        });
+        
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      } catch (e) {
+        console.error("Notification error:", e);
+      }
+    }
+
     if (alarmRef.current) {
       alarmRef.current.currentTime = 0;
       alarmRef.current.play().catch(e => {
@@ -181,6 +200,15 @@ export default function TimeExplorerApp() {
     getTimerDisplayDate,
     handleTimerChange
   } = useTimer(playAlarmSound, stopAlarm);
+
+  const handleToggleTimer = useCallback(() => {
+    if (appMode === 'timer' && !isTimerRunning) {
+      if (typeof Notification !== 'undefined' && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission().catch(e => console.error("Notification permission error:", e));
+      }
+    }
+    toggleTimer();
+  }, [appMode, isTimerRunning, toggleTimer]);
 
   const playThunder = () => {
     const audio = new Audio(AUDIO_URLS.thunder);
@@ -394,7 +422,7 @@ export default function TimeExplorerApp() {
             </div>
             <button 
               aria-label={appMode === 'timer' ? (isTimerRunning ? "Pause timer" : "Start timer") : (isPlaying ? "Pause clock" : "Play clock")}
-              onClick={appMode === 'timer' ? toggleTimer : togglePlay}
+              onClick={appMode === 'timer' ? handleToggleTimer : togglePlay}
               className={cn(
                 "w-12 h-12 flex items-center justify-center rounded-full shadow-sm border-2 transition-colors",
                 (appMode === 'timer' ? isTimerRunning : isPlaying)

@@ -129,20 +129,20 @@ export function AnalogClock({ time, onChangeTime, showSeconds, is24Hour, isPlayi
       
       {fullSecondsCircle ? (
         Array.from({ length: 60 }).map((_, i) => {
-          const m = i === 0 ? (alternateMode && !isTimerMode ? 60 : 0) : i;
+          const m = i === 0 ? 60 : i;
           const angle = (i * 6) * (Math.PI / 180);
           const x = 50 + Math.sin(angle) * 45;
           const y = 50 - Math.cos(angle) * 45;
           const isFive = i % 5 === 0;
-          return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={isFive ? "3" : "2"} fill="url(#minSecGradient)" fontWeight={isFive ? "900" : "600"} className="select-none pointer-events-none">{m === 0 ? '00' : m}</text>;
+          return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={isFive ? "3" : "2"} fill="url(#minSecGradient)" fontWeight={isFive ? "900" : "600"} className="select-none pointer-events-none">{m}</text>;
         })
       ) : (
         Array.from({ length: 12 }).map((_, i) => {
-          const m = i === 0 ? (alternateMode && !isTimerMode ? 60 : 0) : i * 5;
+          const m = i === 0 ? 60 : i * 5;
           const angle = (i * 30) * (Math.PI / 180);
           const x = 50 + Math.sin(angle) * 45;
           const y = 50 - Math.cos(angle) * 45;
-          return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="4" fill="url(#minSecGradient)" fontWeight="900" className="select-none pointer-events-none">{m === 0 ? '00' : m}</text>;
+          return <text key={`m-${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="4" fill="url(#minSecGradient)" fontWeight="900" className="select-none pointer-events-none">{m}</text>;
         })
       )}
 
