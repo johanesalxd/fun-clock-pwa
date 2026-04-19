@@ -64,8 +64,19 @@ export default function TimeExplorerApp() {
   const canPlayThroughListenerRef = useRef<(() => void) | null>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
 
-  // Unlock the AudioContext on first user interaction so the oscillator
-  // fallback can play even after gesture context expires.
+  // Silent keepalive: an AudioBufferSourceNode playing a zero-amplitude buffer
+  // on a loop. When running, it keeps the AudioContext in 'running' state on
+  // iOS so the alarm oscillator can fire without a fresh user gesture.
+  const silentKeepaliveRef = useRef<AudioBufferSourceNode | null>(null);
+  // Periodic health-check interval that nudges the AudioContext if iOS
+  // silently re-suspends it while the timer is counting down.
+  const audioHealthCheckRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Re-unlock the AudioContext on EVERY user interaction.
+  // iOS re-suspends AudioContext after inactivity — using { once: true } means
+  // only the first tap ever unlocks it, so alarms that fire minutes later find
+  // the context suspended and fall silent. Re-running resume() on every
+  // pointerdown/keydown is cheap and keeps the context alive.
   useEffect(() => {
     const unlock = () => {
       if (!audioCtxRef.current) {
@@ -75,8 +86,9 @@ export default function TimeExplorerApp() {
         audioCtxRef.current.resume().catch(() => {});
       }
     };
-    window.addEventListener('pointerdown', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
+    // No { once: true } — we need this to fire on every gesture.
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
     return () => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
@@ -107,6 +119,55 @@ export default function TimeExplorerApp() {
     };
   }, [showLangMenu]);
 
+  // Starts a silent (zero-amplitude) AudioBufferSource loop.
+  // This prevents iOS from suspending the AudioContext between the timer start
+  // and the alarm firing. The buffer is 2 s of silence at the context sample
+  // rate; looping it costs virtually no CPU and zero audible output.
+  const startSilentKeepalive = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    // Stop any existing keepalive first.
+    if (silentKeepaliveRef.current) {
+      try { silentKeepaliveRef.current.stop(); } catch (_) {}
+      silentKeepaliveRef.current = null;
+    }
+
+    const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+    resume.then(() => {
+      const bufferSize = ctx.sampleRate * 2; // 2-second silent buffer
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      // Channel data is already zeroed by default — no fill needed.
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(ctx.destination);
+      source.start();
+      silentKeepaliveRef.current = source;
+    }).catch(() => {});
+
+    // Periodic health check: every 25 s nudge the context if iOS re-suspended it.
+    if (audioHealthCheckRef.current) clearInterval(audioHealthCheckRef.current);
+    audioHealthCheckRef.current = setInterval(() => {
+      const c = audioCtxRef.current;
+      if (!c) return;
+      if (c.state === 'suspended') {
+        c.resume().catch(() => {});
+      }
+    }, 25000);
+  }, []);
+
+  const stopSilentKeepalive = useCallback(() => {
+    if (silentKeepaliveRef.current) {
+      try { silentKeepaliveRef.current.stop(); } catch (_) {}
+      silentKeepaliveRef.current = null;
+    }
+    if (audioHealthCheckRef.current) {
+      clearInterval(audioHealthCheckRef.current);
+      audioHealthCheckRef.current = null;
+    }
+  }, []);
+
   const stopAlarm = useCallback(() => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(0);
@@ -127,7 +188,9 @@ export default function TimeExplorerApp() {
       clearTimeout(alarmTimeoutRef.current);
       alarmTimeoutRef.current = null;
     }
-  }, []);
+    // Stop the silent keepalive once the alarm is done.
+    stopSilentKeepalive();
+  }, [stopSilentKeepalive]);
 
   const playAlarmSound = useCallback(() => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -140,7 +203,8 @@ export default function TimeExplorerApp() {
           body: "Your timer has finished.",
           icon: "/apple-touch-icon.png",
           requireInteraction: true,
-          silent: true,
+          // silent: true removed — allow the OS to play its native notification
+          // sound as a last-resort fallback if Web Audio is still blocked.
         });
         notification.onclick = () => {
           window.focus();
@@ -233,12 +297,53 @@ export default function TimeExplorerApp() {
 
   const handleToggleTimer = useCallback(() => {
     if (appMode === 'timer' && !isTimerRunning) {
+      // --- Starting the timer (user gesture is live here) ---
+
+      // Request notification permission while we have a user gesture.
       if (typeof Notification !== 'undefined' && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission().catch(e => console.error("Notification permission error:", e));
       }
+
+      // Fix 3: Warm up the alarm <audio> element inside the gesture call-stack.
+      // iOS only allows .play() when a user gesture is on the call stack. A
+      // muted play-then-immediate-pause primes the element so the real .play()
+      // call (fired by the timer alarm minutes later) is allowed.
+      if (alarmRef.current) {
+        alarmRef.current.muted = true;
+        alarmRef.current.currentTime = 0;
+        alarmRef.current.play().then(() => {
+          alarmRef.current!.pause();
+          alarmRef.current!.muted = false;
+          alarmRef.current!.currentTime = 0;
+        }).catch(() => {
+          // Warm-up failed (e.g. audio element not yet loaded) — not critical,
+          // the oscillator fallback will cover it.
+          if (alarmRef.current) alarmRef.current.muted = false;
+        });
+      }
+
+      // Fix 1 / Fix 6: Start the silent keepalive loop to keep AudioContext
+      // alive for the entire timer duration. Must be called inside a gesture.
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      startSilentKeepalive();
+    } else if (appMode === 'timer' && isTimerRunning) {
+      // Pausing: stop the keepalive — timer is no longer counting down.
+      stopSilentKeepalive();
     }
     toggleTimer();
-  }, [appMode, isTimerRunning, toggleTimer]);
+  }, [appMode, isTimerRunning, toggleTimer, startSilentKeepalive, stopSilentKeepalive]);
+
+  // Safety-net: stop the keepalive whenever the timer is no longer running or
+  // the user switches away from timer mode (e.g. via Settings). This covers the
+  // path where setAppMode('clock') is called directly without going through
+  // handleToggleTimer or resetTimer.
+  useEffect(() => {
+    if (appMode !== 'timer' || !isTimerRunning) {
+      stopSilentKeepalive();
+    }
+  }, [appMode, isTimerRunning, stopSilentKeepalive]);
 
   const playThunder = () => {
     const audio = new Audio(AUDIO_URLS.thunder);
@@ -367,7 +472,8 @@ export default function TimeExplorerApp() {
         <audio ref={audioRef} src={currentAudioUrl} loop />
         <audio ref={roosterRef} src={AUDIO_URLS.rooster} />
         <audio ref={cricketRef} src={AUDIO_URLS.night} />
-        <audio ref={alarmRef} src={AUDIO_URLS.alarm} loop preload="auto" />
+        {/* playsInline prevents iOS from hijacking alarm audio into a fullscreen player */}
+        <audio ref={alarmRef} src={AUDIO_URLS.alarm} loop preload="auto" playsInline />
 
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -572,6 +678,8 @@ export default function TimeExplorerApp() {
           appMode={appMode}
           setAppMode={setAppMode}
           setIsPlaying={setIsPlaying}
+          isTimerRunning={isTimerRunning}
+          resetTimer={resetTimer}
           display={{
             is24Hour,
             setIs24Hour,

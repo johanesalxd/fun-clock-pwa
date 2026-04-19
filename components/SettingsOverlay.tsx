@@ -32,6 +32,8 @@ interface SettingsOverlayProps {
   appMode: 'clock' | 'timer';
   setAppMode: (v: 'clock' | 'timer') => void;
   setIsPlaying: (v: boolean) => void;
+  isTimerRunning: boolean;
+  resetTimer: () => void;
   display: DisplaySettings;
   audio: AudioSettings;
 }
@@ -43,6 +45,8 @@ export function SettingsOverlay({
   appMode,
   setAppMode,
   setIsPlaying,
+  isTimerRunning,
+  resetTimer,
   display,
   audio
 }: SettingsOverlayProps) {
@@ -68,7 +72,14 @@ export function SettingsOverlay({
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">App Mode</h3>
             <div className="flex gap-2">
               <button
-                onClick={() => setAppMode('clock')}
+                onClick={() => {
+                  if (isTimerRunning) {
+                    const confirmed = window.confirm('Timer is still running. Stop timer and switch to Clock?');
+                    if (!confirmed) return;
+                    resetTimer();
+                  }
+                  setAppMode('clock');
+                }}
                 className={cn("flex-1 py-2 rounded-xl font-bold transition-all", appMode === 'clock' ? "bg-indigo-500 text-white shadow-md" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}
               >
                 Clock
